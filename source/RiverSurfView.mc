@@ -6,6 +6,7 @@ import Toybox.FitContributor;
 import Toybox.Sensor;
 import Toybox.Math;
 import Toybox.Timer;
+import Toybox.System;
 
 class RiverSurfView extends WatchUi.View {
 
@@ -28,9 +29,9 @@ class RiverSurfView extends WatchUi.View {
 
     private var mState = STATE_WAITING;
 
-    // Page navigation index (0: Status, 1: Metrics, 2: Diagnostics)
+    // Page navigation index (0: Primary Page, 1: Diagnostics Page)
     private var mCurrentPage = 0;
-    private const TOTAL_PAGES = 3;
+    private const TOTAL_PAGES = 2;
 
     // Wave statistics
     private var mTotalWaves = 0;
@@ -109,7 +110,6 @@ class RiverSurfView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    // Page navigation methods called by Delegate
     function nextPage() {
         mCurrentPage = (mCurrentPage + 1) % TOTAL_PAGES;
         WatchUi.requestUpdate();
@@ -342,11 +342,23 @@ class RiverSurfView extends WatchUi.View {
         WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
     }
 
-    // Format seconds into MM:SS
     private function formatTime(totalSeconds) {
         var mins = totalSeconds / 60;
         var secs = totalSeconds % 60;
         return mins.format("%02d") + ":" + secs.format("%02d");
+    }
+
+    private function getClockTimeStr() {
+        var clockTime = System.getClockTime();
+        var hours = clockTime.hour;
+        if (!System.getDeviceSettings().is24Hour) {
+            if (hours > 12) {
+                hours = hours - 12;
+            } else if (hours == 0) {
+                hours = 12;
+            }
+        }
+        return hours.format("%02d") + ":" + clockTime.min.format("%02d");
     }
 
     function onUpdate(dc) {
@@ -360,31 +372,27 @@ class RiverSurfView extends WatchUi.View {
         // 1. Instinct 2 Top-Right Sub-Window Circle (Wave Count)
         // ----------------------------------------------------
         var subCenterX = 138;
-        var subCenterY = 38;
-        var subRadius = 26;
+        var subCenterY = 36;
+        var subRadius = 25;
 
-        // Draw sub-window circle border
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
         dc.drawCircle(subCenterX, subCenterY, subRadius);
 
-        // Fill background for depth
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.fillCircle(subCenterX, subCenterY, subRadius - 1);
 
-        // Sub-Window Contents (WAVES label + count)
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(subCenterX, subCenterY - 12, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(subCenterX, subCenterY - 11, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(subCenterX, subCenterY + 4, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Reset Pen Width
         dc.setPenWidth(1);
 
         // ----------------------------------------------------
-        // 2. Top Header & Recording Indicator
+        // 2. Top-Left Header & Recording Indicator
         // ----------------------------------------------------
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(42, 16, Graphics.FONT_XTINY, "RIVER SURF", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(48, 16, Graphics.FONT_XTINY, "RIVER SURF", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         var recText = "[READY]";
         if (mSession != null) {
@@ -394,16 +402,15 @@ class RiverSurfView extends WatchUi.View {
                 recText = "[PAUSED]";
             }
         }
-        dc.drawText(42, 32, Graphics.FONT_XTINY, recText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(48, 32, Graphics.FONT_XTINY, recText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Horizontal Divider below header
-        dc.drawLine(0, 52, width, 52);
+        dc.drawLine(0, 52, 112, 52);
 
         // ----------------------------------------------------
         // 3. Render Active Page Layout
         // ----------------------------------------------------
         if (mCurrentPage == 0) {
-            // PAGE 0: Primary Status & Quick Metrics
+            // PAGE 1: Primary Status & Quick Metrics
             var statusText = "[ WAITING ]";
             if (mState == STATE_SURFING) {
                 statusText = "SURFING!";
@@ -411,10 +418,9 @@ class RiverSurfView extends WatchUi.View {
                 statusText = "! SWEPT !";
             }
 
-            // High-visibility Inverted Banner for SURFING
             if (mState == STATE_SURFING) {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(8, 62, width - 16, 38);
+                dc.fillRectangle(12, 60, width - 24, 36);
                 dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
             } else {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -422,74 +428,44 @@ class RiverSurfView extends WatchUi.View {
 
             dc.drawText(
                 width / 2,
-                80,
+                78,
                 Graphics.FONT_LARGE,
                 statusText,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
             );
 
-            // Divider
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawLine(0, 110, width, 110);
+            dc.drawLine(10, 106, width - 10, 106);
 
-            // Bottom Metrics
+            // Bottom Metrics: SURF TIME (Left) and TIME OF DAY (Right)
             var surfTimeStr = formatTime(mTotalSurfingTime);
-            var maxSpeedStr = (mMaxWaveSpeed * 3.6).format("%.1f") + "k/h";
+            var clockStr = getClockTimeStr();
 
-            dc.drawText(width / 4, 126, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText(width / 4, 145, Graphics.FONT_SMALL, surfTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 4, 118, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 4, 136, Graphics.FONT_SMALL, surfTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            dc.drawText((3 * width) / 4, 126, Graphics.FONT_XTINY, "MAX SPEED", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText((3 * width) / 4, 145, Graphics.FONT_SMALL, maxSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((3 * width) / 4, 118, Graphics.FONT_XTINY, "TIME OF DAY", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((3 * width) / 4, 136, Graphics.FONT_SMALL, clockStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            // Vertical divider between bottom metrics
-            dc.drawLine(width / 2, 110, width / 2, height);
+            dc.drawLine(width / 2, 106, width / 2, 150);
 
         } else if (mCurrentPage == 1) {
-            // PAGE 1: 4-Grid Surf Metrics
-            var surfTimeStr = formatTime(mTotalSurfingTime);
-            var longestStr = mLongestWaveDuration.toString() + "s";
-            var maxSpeedStr = (mMaxWaveSpeed * 3.6).format("%.1f") + "k/h";
-            var hrStr = (mHeartRate > 0) ? mHeartRate.toString() + "bpm" : "--";
-
-            // Grid Dividers
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawLine(width / 2, 52, width / 2, height);
-            dc.drawLine(0, 110, width, 110);
-
-            // Top-Left: Surf Time
-            dc.drawText(width / 4, 66, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText(width / 4, 88, Graphics.FONT_SMALL, surfTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            // Top-Right: Longest Wave
-            dc.drawText((3 * width) / 4, 66, Graphics.FONT_XTINY, "LONGEST", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText((3 * width) / 4, 88, Graphics.FONT_SMALL, longestStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            // Bottom-Left: Max Speed
-            dc.drawText(width / 4, 124, Graphics.FONT_XTINY, "MAX SPEED", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText(width / 4, 146, Graphics.FONT_SMALL, maxSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            // Bottom-Right: Heart Rate
-            dc.drawText((3 * width) / 4, 124, Graphics.FONT_XTINY, "HEART RATE", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText((3 * width) / 4, 146, Graphics.FONT_SMALL, hrStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        } else if (mCurrentPage == 2) {
             // PAGE 2: Sensor & Motion Diagnostics
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-            dc.drawText(width / 2, 65, Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, 64, Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var accelStr = mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING";
-            dc.drawText(width / 2, 88, Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, 84, Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var varStr = "CARVE VARIANCE: " + mCurrentVariance.format("%.0f");
-            dc.drawText(width / 2, 110, Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, 104, Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var speedKmhStr = "GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h";
-            dc.drawText(width / 2, 132, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, 124, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            var pageStr = "PAGE 3/3 (UP/DN SCROLL)";
-            dc.drawText(width / 2, 154, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            var pageStr = "PAGE 2/2 (UP/DN SCROLL)";
+            dc.drawText(width / 2, 142, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 }
