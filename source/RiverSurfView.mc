@@ -32,15 +32,17 @@ class RiverSurfView extends WatchUi.DataField {
     private var mAccelBuffer = [1000.0, 1000.0, 1000.0, 1000.0, 1000.0];
     private var mBufferIndex = 0;
     private var mLastAccelMag = 1000.0;
+    private var mCurrentVariance = 0.0;
+    private var mHasAccelData = false;
+    private var mTimerRunning = false;
 
-    // Responsive threshold for motion variance (5000 millig^2)
-    private const SURF_ACCEL_VAR_THRESHOLD = 5000.0;
+    // Motion variance threshold (millig^2)
+    private const SURF_ACCEL_VAR_THRESHOLD = 2000.0;
     private const SWEEP_SPEED_THRESHOLD = 2.5;
 
     function initialize() {
         DataField.initialize();
 
-        // Custom FIT Field IDs: Count (0, SESSION), Time (1, SESSION), Duration (2, RECORD)
         try {
             mWaveCountField = createField(
                 "wave_count",
@@ -61,20 +63,31 @@ class RiverSurfView extends WatchUi.DataField {
                 { :mesgType => FitContributor.MESG_TYPE_RECORD, :label => "Wave Duration", :units => "s" }
             );
         } catch (e) {
-            // Safe fallback if FIT fields initialization encounters device limits
+            // FIT field fallback
         }
     }
 
     function compute(info) {
         try {
-            var speed = (info != null && info.currentSpeed != null) ? info.currentSpeed : 0.0;
+            var speed = 0.0;
+            if (info != null) {
+                if (info.currentSpeed != null) {
+                    speed = info.currentSpeed;
+                }
+                if (info.timerState != null) {
+                    mTimerRunning = (info.timerState == Activity.TIMER_STATE_ON);
+                } else {
+                    mTimerRunning = true;
+                }
+            }
 
-            // Safe DataField sensor query using Sensor.getInfo()
+            // Read accelerometer from Sensor.getInfo()
             var accelMag = mLastAccelMag;
             var sensorInfo = Sensor.getInfo();
             if (sensorInfo != null && sensorInfo.accel != null) {
                 var accel = sensorInfo.accel;
                 if (accel != null && accel.size() >= 3) {
+                    mHasAccelData = true;
                     var ax = accel[0].toFloat();
                     var ay = accel[1].toFloat();
                     var az = accel[2].toFloat();
@@ -97,11 +110,11 @@ class RiverSurfView extends WatchUi.DataField {
                 var diff = mAccelBuffer[i] - mean;
                 variance += diff * diff;
             }
-            variance = variance / BUFFER_SIZE;
+            mCurrentVariance = variance / BUFFER_SIZE;
 
             switch (mState) {
                 case STATE_WAITING:
-                    if (variance > SURF_ACCEL_VAR_THRESHOLD && speed < SWEEP_SPEED_THRESHOLD) {
+                    if (mCurrentVariance > SURF_ACCEL_VAR_THRESHOLD && speed < SWEEP_SPEED_THRESHOLD) {
                         mState = STATE_SURFING;
                         mCurrentWaveDuration = 0;
                         mWaveRegistered = false;
@@ -135,7 +148,7 @@ class RiverSurfView extends WatchUi.DataField {
                         if (mWaveDurationField != null) {
                             mWaveDurationField.setData(0);
                         }
-                    } else if (variance <= SURF_ACCEL_VAR_THRESHOLD) {
+                    } else if (mCurrentVariance <= SURF_ACCEL_VAR_THRESHOLD) {
                         mState = STATE_WAITING;
                         if (mWaveDurationField != null) {
                             mWaveDurationField.setData(0);
@@ -150,7 +163,7 @@ class RiverSurfView extends WatchUi.DataField {
                     break;
             }
         } catch (e) {
-            // Keep state intact on exception
+            // Keep state intact
         }
 
         return null;
@@ -170,7 +183,6 @@ class RiverSurfView extends WatchUi.DataField {
             var width = dc.getWidth();
             var height = dc.getHeight();
 
-            // Draw outer border box
             dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(1, 1, width - 2, height - 2);
 
@@ -188,7 +200,6 @@ class RiverSurfView extends WatchUi.DataField {
                 font = Graphics.FONT_LARGE;
             }
 
-            // Inverted highlight banner for SURFING state
             if (mState == STATE_SURFING) {
                 var bannerW = width - 12;
                 var bannerH = (font == Graphics.FONT_LARGE) ? 36 : 26;
@@ -200,29 +211,29 @@ class RiverSurfView extends WatchUi.DataField {
                 dc.setColor(bgColor, Graphics.COLOR_TRANSPARENT);
             }
 
-            // Draw status string
             dc.drawText(
                 width / 2,
-                (height / 2) - 4,
+                (height / 2) - 10,
                 font,
                 statusText,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
             );
 
-            // Draw wave count sub-label
+            // Diagnostics & Waves info text
             dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
-            var subText = "WAVES: " + mTotalWaves.toString();
-            if (height >= 60) {
+            var accelStatus = mHasAccelData ? "OK" : "NO_ACC";
+            var debugText = "V:" + mCurrentVariance.format("%.0f") + " | " + accelStatus + " | W:" + mTotalWaves.toString();
+            
+            if (height >= 50) {
                 dc.drawText(
                     width / 2,
                     height - 12,
                     Graphics.FONT_XTINY,
-                    subText,
+                    debugText,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
                 );
             }
         } catch (e) {
-            // Fallback rendering on error
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
             dc.clear();
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
