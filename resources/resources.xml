@@ -1,7 +1,7 @@
 <resources>
     <!-- 1. App Name String Definition -->
     <strings>
-        <string id="AppName">RiverSurf</string>
+        <string id="AppName">RSL-Status</string>
     </strings>
 
     <!-- 2. Validated Launcher Icon Bitmap Element -->
@@ -19,5 +19,21 @@
                   chartTitle="Wave Count" 
                   displayInChart="true" 
                   displayInActivitySummary="true" />
+        <fitField id="1" 
+                  dataLabel="Time Surfing" 
+                  unitLabel="s" 
+                  sortOrder="1" 
+                  precision="0" 
+                  chartTitle="Surf Time" 
+                  displayInChart="true" 
+                  displayInActivitySummary="true" />
+        <fitField id="2" 
+                  dataLabel="Wave Duration" 
+                  unitLabel="s" 
+                  sortOrder="2" 
+                  precision="0" 
+                  chartTitle="Wave Duration" 
+                  displayInChart="true" 
+                  displayInActivitySummary="false" />
     </fitContributions>
 </resources>
