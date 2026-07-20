@@ -1,38 +1,65 @@
 <resources>
-    <!-- 1. App Name String Definition -->
+    <!-- 1. String Definitions -->
     <strings>
-        <string id="AppName">RSL-Status</string>
+        <string id="AppName">RiverSurf</string>
+        <string id="WaveCount">Wave Count</string>
+        <string id="SurfTime">Surf Time</string>
+        <string id="MaxSurfSpeed">Max Surf Speed</string>
+        <string id="LongestWave">Longest Wave</string>
+        <string id="WaveDuration">Wave Duration</string>
+        <string id="WavesUnit">waves</string>
+        <string id="SecUnit">s</string>
+        <string id="MsUnit">m/s</string>
     </strings>
 
-    <!-- 2. Validated Launcher Icon Bitmap Element -->
+    <!-- 2. Launcher Icon Bitmap Element -->
     <drawables>
         <bitmap id="LauncherIcon" filename="icon.png" />
     </drawables>
 
-    <!-- 3. Validated Fit Field XML Schema Mapping -->
+    <!-- 3. Fit Field XML Schema Mapping -->
     <fitContributions>
         <fitField id="0" 
-                  dataLabel="Waves" 
-                  unitLabel="waves" 
+                  dataLabel="@Strings.WaveCount" 
+                  unitLabel="@Strings.WavesUnit" 
                   sortOrder="0" 
                   precision="0" 
-                  chartTitle="Wave Count" 
+                  chartTitle="@Strings.WaveCount" 
+                  fillColor="#00A0FF"
                   displayInChart="true" 
                   displayInActivitySummary="true" />
         <fitField id="1" 
-                  dataLabel="Time Surfing" 
-                  unitLabel="s" 
+                  dataLabel="@Strings.SurfTime" 
+                  unitLabel="@Strings.SecUnit" 
                   sortOrder="1" 
                   precision="0" 
-                  chartTitle="Surf Time" 
+                  chartTitle="@Strings.SurfTime" 
+                  fillColor="#00FF00"
                   displayInChart="true" 
                   displayInActivitySummary="true" />
         <fitField id="2" 
-                  dataLabel="Wave Duration" 
-                  unitLabel="s" 
+                  dataLabel="@Strings.MaxSurfSpeed" 
+                  unitLabel="@Strings.MsUnit" 
                   sortOrder="2" 
+                  precision="1" 
+                  chartTitle="@Strings.MaxSurfSpeed" 
+                  fillColor="#FF5500"
+                  displayInChart="true" 
+                  displayInActivitySummary="true" />
+        <fitField id="3" 
+                  dataLabel="@Strings.LongestWave" 
+                  unitLabel="@Strings.SecUnit" 
+                  sortOrder="3" 
                   precision="0" 
-                  chartTitle="Wave Duration" 
+                  displayInChart="false" 
+                  displayInActivitySummary="true" />
+        <fitField id="4" 
+                  dataLabel="@Strings.WaveDuration" 
+                  unitLabel="@Strings.SecUnit" 
+                  sortOrder="4" 
+                  precision="0" 
+                  chartTitle="@Strings.WaveDuration" 
+                  fillColor="#FFFF00"
                   displayInChart="true" 
                   displayInActivitySummary="false" />
     </fitContributions>
