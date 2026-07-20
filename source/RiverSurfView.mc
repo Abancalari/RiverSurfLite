@@ -8,7 +8,7 @@ import Toybox.Sensor;
 import Toybox.Math;
 import Toybox.Timer;
 
-class RiverSurfView extends WatchUi.View {
+class RiverSurfView extends WatchUi.DataField {
 
     // Fit Field IDs
     private const FIT_WAVE_COUNT_FIELD_ID = 0;
@@ -59,7 +59,12 @@ class RiverSurfView extends WatchUi.View {
     private var mGpsAccuracy = 0;
 
     function initialize() {
-        View.initialize();
+        DataField.initialize();
+
+        // Properly initialize DataField Fit Contributor Fields
+        mWaveCountField = createField("wave_count", 0, Toybox.FitContributor.DATA_TYPE_UINT16, { :mesgType => Toybox.FitContributor.MESG_TYPE_SESSION, :label => "Waves" });
+        mTimeSurfingField = createField("time_surfing", 1, Toybox.FitContributor.DATA_TYPE_UINT32, { :mesgType => Toybox.FitContributor.MESG_TYPE_SESSION, :label => "Time Surfing", :units => "s" });
+        mWaveDurationField = createField("wave_duration", 2, Toybox.FitContributor.DATA_TYPE_UINT16, { :mesgType => Toybox.FitContributor.MESG_TYPE_RECORD, :label => "Wave Duration", :units => "s" });
 
         // Initialize accelerometer rolling buffer
         for (var i = 0; i < BUFFER_SIZE; i++) {
@@ -89,7 +94,7 @@ class RiverSurfView extends WatchUi.View {
         if (info != null) {
             mSpeed = (info.currentSpeed != null) ? info.currentSpeed : 0.0;
             mHeartRate = (info.currentHeartRate != null) ? info.currentHeartRate : 0;
-            mGpsAccuracy = (info.gpsAccuracy != null) ? info.gpsAccuracy : 0;
+            mGpsAccuracy = (info.currentLocationAccuracy != null) ? info.currentLocationAccuracy : 0;
         }
 
         // Only run wave detection if we are actively recording
@@ -192,45 +197,6 @@ class RiverSurfView extends WatchUi.View {
 
     // Toggle Recording (called by Delegate)
     function toggleRecording() {
-        if (mSession == null) {
-            // Create a custom session for native Surfing activity
-            mSession = ActivityRecording.createSession({
-                :name => "River Surfing",
-                :sport => ActivityRecording.SPORT_SURFING,
-                :subSport => ActivityRecording.SUB_SPORT_GENERIC
-            });
-
-            // Initialize Fit contributor fields
-            mWaveCountField = mSession.createField(
-                "wave_count", 
-                FIT_WAVE_COUNT_FIELD_ID, 
-                FitContributor.DATA_TYPE_UINT16, 
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Waves" }
-            );
-            mTimeSurfingField = mSession.createField(
-                "time_surfing", 
-                FIT_TIME_SURFING_FIELD_ID, 
-                FitContributor.DATA_TYPE_UINT32, 
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Time Surfing", :units => "s" }
-            );
-            mWaveDurationField = mSession.createField(
-                "wave_duration", 
-                FIT_WAVE_DURATION_FIELD_ID, 
-                FitContributor.DATA_TYPE_UINT16, 
-                { :mesgType => FitContributor.MESG_TYPE_RECORD, :label => "Wave Duration", :units => "s" }
-            );
-
-            // Write initial values
-            if (mWaveCountField != null) { mWaveCountField.setData(0); }
-            if (mTimeSurfingField != null) { mTimeSurfingField.setData(0); }
-            if (mWaveDurationField != null) { mWaveDurationField.setData(0); }
-
-            mSession.start();
-        } else if (mSession.isRecording()) {
-            mSession.stop();
-        } else {
-            mSession.start();
-        }
         WatchUi.requestUpdate();
     }
 
