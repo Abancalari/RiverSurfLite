@@ -14,9 +14,7 @@ class RiverSurfFieldApp extends Application.AppBase {
     }
 
     function getInitialView() {
-        var view = new RiverSurfView();
-        var delegate = new RiverSurfDelegate(view);
-        return [view, delegate];
+        return [ new RiverSurfView() ];
     }
 
 }

@@ -32,6 +32,9 @@ class RiverSurfView extends WatchUi.DataField {
     private var mAccelBuffer = [1000.0, 1000.0, 1000.0, 1000.0, 1000.0];
     private var mBufferIndex = 0;
 
+    // Current accelerometer magnitude in millig
+    private var mCurrentAccelMag = 1000.0;
+
     // Thresholds
     private const SURF_ACCEL_VAR_THRESHOLD = 20000.0;
     private const SWEEP_SPEED_THRESHOLD = 2.5;
@@ -58,12 +61,38 @@ class RiverSurfView extends WatchUi.DataField {
             FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :label => "Wave Duration", :units => "s" }
         );
+
+        // Register accelerometer listener to receive 1Hz sensor updates
+        try {
+            Sensor.registerSensorDataListener(method(:onAccelData), {
+                :period => 1,
+                :accelerometer => { :enabled => true }
+            });
+        } catch (e) {
+            // Devices without sensor listener fallback to Sensor.getInfo()
+        }
+    }
+
+    // Callback received when accelerometer sample is ready with strict type annotation
+    function onAccelData(sensorData as Sensor.SensorData) as Void {
+        if (sensorData != null && sensorData.accelerometerData != null) {
+            var x = sensorData.accelerometerData.x;
+            var y = sensorData.accelerometerData.y;
+            var z = sensorData.accelerometerData.z;
+            if (x != null && x.size() > 0 && y != null && z != null) {
+                var ax = x[0].toFloat();
+                var ay = y[0].toFloat();
+                var az = z[0].toFloat();
+                mCurrentAccelMag = Math.sqrt(ax * ax + ay * ay + az * az);
+            }
+        }
     }
 
     function compute(info) {
         var speed = (info != null && info.currentSpeed != null) ? info.currentSpeed : 0.0;
 
-        var accelMag = 1000.0;
+        // Fallback to Sensor.getInfo() if listener callback hasn't updated
+        var accelMag = mCurrentAccelMag;
         var sensorInfo = Sensor.getInfo();
         if (sensorInfo != null && sensorInfo.accel != null) {
             var ax = sensorInfo.accel[0].toFloat();
@@ -143,13 +172,16 @@ class RiverSurfView extends WatchUi.DataField {
     }
 
     function onUpdate(dc) {
-        var bg = getBackgroundColor();
-        var fg = (bg == Graphics.COLOR_BLACK) ? Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
+        var rawBg = getBackgroundColor();
+        var isDark = (rawBg == Graphics.COLOR_BLACK || rawBg == Graphics.COLOR_DK_GRAY);
 
-        dc.setColor(bg, bg);
+        var bgColor = isDark ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
+        var textColor = isDark ? Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
+
+        dc.setColor(bgColor, bgColor);
         dc.clear();
 
-        dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
 
         var statusText = "WAITING";
         if (mState == STATE_SURFING) {
@@ -158,10 +190,20 @@ class RiverSurfView extends WatchUi.DataField {
             statusText = "SWEPT";
         }
 
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+
+        var font = Graphics.FONT_MEDIUM;
+        if (height < 50) {
+            font = Graphics.FONT_SMALL;
+        } else if (height > 90) {
+            font = Graphics.FONT_LARGE;
+        }
+
         dc.drawText(
-            dc.getWidth() / 2,
-            dc.getHeight() / 2,
-            Graphics.FONT_LARGE,
+            width / 2,
+            height / 2,
+            font,
             statusText,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
         );
