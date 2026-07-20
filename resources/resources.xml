@@ -1,30 +1,23 @@
 <resources>
+    <!-- 1. App Name String Definition -->
     <strings>
-        <string id="fit_wave_count_label">Waves</string>
-        <string id="fit_time_surfing_label">Time Surfing</string>
-        <string id="fit_wave_duration_label">Wave Duration</string>
-        <string id="fit_units_seconds">s</string>
+        <string id="AppName">RiverSurf</string>
     </strings>
-    
+
+    <!-- 2. Validated Launcher Icon Bitmap Element -->
+    <drawables>
+        <bitmap id="LauncherIcon" filename="icon.png" />
+    </drawables>
+
+    <!-- 3. Validated Fit Field XML Schema Mapping -->
     <fitContributions>
         <fitField id="0" 
-                  displayInChart="false" 
+                  dataLabel="Waves" 
+                  unitLabel="waves" 
                   sortOrder="0" 
-                  precision="0"
-                  dataLabel="@Strings.fit_wave_count_label" />
-        <fitField id="1" 
-                  displayInChart="false" 
-                  sortOrder="1" 
-                  precision="0"
-                  dataLabel="@Strings.fit_time_surfing_label" 
-                  unitLabel="@Strings.fit_units_seconds" />
-        <fitField id="2" 
+                  precision="0" 
+                  chartTitle="Wave Count" 
                   displayInChart="true" 
-                  sortOrder="2" 
-                  precision="0"
-                  chartTitle="@Strings.fit_wave_duration_label" 
-                  dataLabel="@Strings.fit_wave_duration_label" 
-                  unitLabel="@Strings.fit_units_seconds"
-                  fillColor="#00A0FF" />
+                  displayInActivitySummary="true" />
     </fitContributions>
 </resources>

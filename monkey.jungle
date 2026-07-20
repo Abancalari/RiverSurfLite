@@ -1,8 +1,2 @@
 project.manifest = manifest.xml
-base.barrels = $(base.barrels);/opt/garmin/ConnectIQ/Sdk/bin/../resources/devices.barrel;/opt/garmin/ConnectIQ/Sdk/bin/../resources/monkeybrains.barrel
-
-products = fenix7;epix;tactix
-
-langversion = 2.0
-
-excludeAnnotations = Debug;Compile
+base.sourcePath = source
