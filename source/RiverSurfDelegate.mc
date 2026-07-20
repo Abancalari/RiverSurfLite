@@ -9,6 +9,7 @@ class RiverSurfDelegate extends WatchUi.BehaviorDelegate {
         mView = view;
     }
 
+    // Start/Stop button
     function onSelect() {
         if (mView != null) {
             mView.toggleRecording();
@@ -16,6 +17,23 @@ class RiverSurfDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    // UP button (Previous Page)
+    function onPreviousPage() {
+        if (mView != null) {
+            mView.previousPage();
+        }
+        return true;
+    }
+
+    // DOWN button (Next Page)
+    function onNextPage() {
+        if (mView != null) {
+            mView.nextPage();
+        }
+        return true;
+    }
+
+    // Back button (Pause Menu)
     function onBack() {
         if (mView != null) {
             if (mView.isRecording() || mView.hasSession()) {
