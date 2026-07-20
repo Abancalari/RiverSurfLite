@@ -34,7 +34,6 @@ class RiverSurfView extends WatchUi.DataField {
     private var mLastAccelMag = 1000.0;
     private var mCurrentVariance = 0.0;
     private var mHasAccelData = false;
-    private var mTimerRunning = false;
 
     // Motion variance threshold (millig^2)
     private const SURF_ACCEL_VAR_THRESHOLD = 2000.0;
@@ -65,23 +64,49 @@ class RiverSurfView extends WatchUi.DataField {
         } catch (e) {
             // FIT field fallback
         }
+
+        // Register accelerometer listener to activate hardware sensor stream
+        try {
+            Sensor.registerSensorDataListener(method(:onAccelData), {
+                :period => 1,
+                :accelerometer => { :enabled => true }
+            });
+        } catch (e) {
+            // Fallback for devices without sensor listener
+        }
+    }
+
+    // Callback received when accelerometer sample batch is ready
+    function onAccelData(sensorData as Sensor.SensorData) as Void {
+        if (sensorData != null && sensorData.accelerometerData != null) {
+            var x = sensorData.accelerometerData.x;
+            var y = sensorData.accelerometerData.y;
+            var z = sensorData.accelerometerData.z;
+            if (x != null && y != null && z != null && x.size() > 0) {
+                var maxMag = 0.0;
+                for (var i = 0; i < x.size(); i++) {
+                    var ax = x[i].toFloat();
+                    var ay = y[i].toFloat();
+                    var az = z[i].toFloat();
+                    var mag = Math.sqrt(ax * ax + ay * ay + az * az);
+                    if (mag > maxMag) {
+                        maxMag = mag;
+                    }
+                }
+                mLastAccelMag = maxMag;
+                mHasAccelData = true;
+            }
+        }
     }
 
     function compute(info) {
         try {
             var speed = 0.0;
-            if (info != null) {
-                if (info.currentSpeed != null) {
-                    speed = info.currentSpeed;
-                }
-                if (info.timerState != null) {
-                    mTimerRunning = (info.timerState == Activity.TIMER_STATE_ON);
-                } else {
-                    mTimerRunning = true;
-                }
+            if (info != null && info.currentSpeed != null) {
+                speed = info.currentSpeed;
             }
 
-            // Read accelerometer from Sensor.getInfo()
+            // Also check Sensor.getInfo().accel as secondary source
             var accelMag = mLastAccelMag;
             var sensorInfo = Sensor.getInfo();
             if (sensorInfo != null && sensorInfo.accel != null) {
@@ -91,8 +116,10 @@ class RiverSurfView extends WatchUi.DataField {
                     var ax = accel[0].toFloat();
                     var ay = accel[1].toFloat();
                     var az = accel[2].toFloat();
-                    accelMag = Math.sqrt(ax * ax + ay * ay + az * az);
-                    mLastAccelMag = accelMag;
+                    var mag = Math.sqrt(ax * ax + ay * ay + az * az);
+                    if (mag > accelMag) {
+                        accelMag = mag;
+                    }
                 }
             }
 
