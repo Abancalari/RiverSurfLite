@@ -184,28 +184,15 @@ class RiverSurfView extends WatchUi.View {
 
                         if (mSpeed > mMaxWaveSpeed) {
                             mMaxWaveSpeed = mSpeed;
-                            if (mMaxWaveSpeedField != null) {
-                                mMaxWaveSpeedField.setData(mMaxWaveSpeed);
-                            }
                         }
 
                         if (mCurrentWaveDuration >= 3 && !mWaveRegistered) {
                             mTotalWaves += 1;
                             mWaveRegistered = true;
-                            if (mWaveCountField != null) {
-                                mWaveCountField.setData(mTotalWaves);
-                            }
                         }
 
                         if (mWaveRegistered) {
                             mTotalSurfingTime += 1;
-                            if (mTimeSurfingField != null) {
-                                mTimeSurfingField.setData(mTotalSurfingTime);
-                            }
-                        }
-
-                        if (mWaveDurationField != null) {
-                            mWaveDurationField.setData(mCurrentWaveDuration);
                         }
 
                         var endWave = false;
@@ -220,12 +207,6 @@ class RiverSurfView extends WatchUi.View {
                         if (endWave) {
                             if (mCurrentWaveDuration > mLongestWaveDuration) {
                                 mLongestWaveDuration = mCurrentWaveDuration;
-                                if (mLongestWaveField != null) {
-                                    mLongestWaveField.setData(mLongestWaveDuration);
-                                }
-                            }
-                            if (mWaveDurationField != null) {
-                                mWaveDurationField.setData(0);
                             }
                         }
                         break;
@@ -236,11 +217,34 @@ class RiverSurfView extends WatchUi.View {
                         }
                         break;
                 }
+
+                // Continuously sync active data to FIT fields during recording
+                updateFitFields();
             } else {
                 mState = STATE_WAITING;
             }
         } catch (e) {
             // Keep state intact
+        }
+    }
+
+    // Explicitly update all FIT session & record fields
+    private function updateFitFields() {
+        if (mWaveCountField != null) {
+            mWaveCountField.setData(mTotalWaves);
+        }
+        if (mTimeSurfingField != null) {
+            mTimeSurfingField.setData(mTotalSurfingTime);
+        }
+        if (mMaxWaveSpeedField != null) {
+            mMaxWaveSpeedField.setData(mMaxWaveSpeed);
+        }
+        if (mLongestWaveField != null) {
+            mLongestWaveField.setData(mLongestWaveDuration);
+        }
+        if (mWaveDurationField != null) {
+            var dur = (mState == STATE_SURFING) ? mCurrentWaveDuration : 0;
+            mWaveDurationField.setData(dur);
         }
     }
 
@@ -302,6 +306,9 @@ class RiverSurfView extends WatchUi.View {
 
     function saveSession() {
         if (mSession != null) {
+            // Flush final FIT field values right before stopping and saving
+            updateFitFields();
+
             if (mSession.isRecording()) {
                 mSession.stop();
             }
@@ -342,130 +349,88 @@ class RiverSurfView extends WatchUi.View {
         WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
     }
 
-    private function formatTime(totalSeconds) {
-        var mins = totalSeconds / 60;
-        var secs = totalSeconds % 60;
-        return mins.format("%02d") + ":" + secs.format("%02d");
-    }
-
-    private function getClockTimeStr() {
-        var clockTime = System.getClockTime();
-        var hours = clockTime.hour;
-        if (!System.getDeviceSettings().is24Hour) {
-            if (hours > 12) {
-                hours = hours - 12;
-            } else if (hours == 0) {
-                hours = 12;
-            }
-        }
-        return hours.format("%02d") + ":" + clockTime.min.format("%02d");
-    }
-
     function onUpdate(dc) {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-
-        // ----------------------------------------------------
-        // 1. Instinct 2 Top-Right Sub-Window Circle (Wave Count)
-        // ----------------------------------------------------
-        var subCenterX = 138;
-        var subCenterY = 36;
-        var subRadius = 25;
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
-        dc.drawCircle(subCenterX, subCenterY, subRadius);
-
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(subCenterX, subCenterY, subRadius - 1);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(subCenterX, subCenterY - 11, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.drawText(subCenterX, subCenterY + 4, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.setPenWidth(1);
-
-        // ----------------------------------------------------
-        // 2. Top-Left Header & Recording Indicator
-        // ----------------------------------------------------
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(48, 16, Graphics.FONT_XTINY, "RIVER SURF", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        var recText = "[READY]";
-        if (mSession != null) {
-            if (mSession.isRecording()) {
-                recText = "[REC]";
-            } else {
-                recText = "[PAUSED]";
-            }
-        }
-        dc.drawText(48, 32, Graphics.FONT_XTINY, recText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.drawLine(0, 52, 112, 52);
-
-        // ----------------------------------------------------
-        // 3. Render Active Page Layout
-        // ----------------------------------------------------
         if (mCurrentPage == 0) {
-            // PAGE 1: Primary Status & Quick Metrics
-            var statusText = "[ WAITING ]";
-            if (mState == STATE_SURFING) {
-                statusText = "SURFING!";
-            } else if (mState == STATE_SWEPT) {
-                statusText = "! SWEPT !";
-            }
-
-            if (mState == STATE_SURFING) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(12, 60, width - 24, 36);
-                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            } else {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            }
-
-            dc.drawText(
-                width / 2,
-                78,
-                Graphics.FONT_LARGE,
-                statusText,
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-            );
+            // 1. Black Background
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawLine(10, 106, width - 10, 106);
 
-            // Bottom Metrics: SURF TIME (Left) and TIME OF DAY (Right)
-            var surfTimeStr = formatTime(mTotalSurfingTime);
-            var clockStr = getClockTimeStr();
+            // ----------------------------------------------------
+            // 1. Top-Left Header Zone
+            // ----------------------------------------------------
+            dc.drawText(8, 8, Graphics.FONT_XTINY, "RIVER SURF", Graphics.TEXT_JUSTIFY_LEFT);
+            
+            var stateLabel = "[READY]";
+            if (mSession != null && mSession.isRecording()) {
+                stateLabel = "[REC]";
+            }
+            dc.drawText(8, 22, Graphics.FONT_XTINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
-            dc.drawText(width / 4, 118, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText(width / 4, 136, Graphics.FONT_SMALL, surfTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            // ----------------------------------------------------
+            // 2. Sub-Window Lens (Circle Lens Fix)
+            // ----------------------------------------------------
+            var subCenterX = 138;
+            
+            dc.drawText(subCenterX, 26, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(subCenterX, 38, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            dc.drawText((3 * width) / 4, 118, Graphics.FONT_XTINY, "TIME OF DAY", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.drawText((3 * width) / 4, 136, Graphics.FONT_SMALL, clockStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            // ----------------------------------------------------
+            // 3. Main Status Banner (Center)
+            // ----------------------------------------------------
+            var statusText = "[ WAITING ]";
+            if (mState == STATE_SURFING) {
+                statusText = "[ SURFING! ]";
+            } else if (mState == STATE_SWEPT) {
+                statusText = "[ SWEPT ]";
+            }
 
-            dc.drawLine(width / 2, 106, width / 2, 150);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+            dc.fillRectangle(0, 58, 176, 38);
+
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(88, 77, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+            // ----------------------------------------------------
+            // 4. Bottom Split Layout (Surf Time | Time of Day)
+            // ----------------------------------------------------
+            dc.drawLine(88, 108, 88, 160);
+
+            dc.drawText(44, 110, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            
+            var surfMins = mTotalSurfingTime / 60;
+            var surfSecs = mTotalSurfingTime % 60;
+            var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
+            dc.drawText(44, 130, Graphics.FONT_SMALL, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
+
+            dc.drawText(132, 110, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
+
+            var clockTime = System.getClockTime();
+            var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
+            dc.drawText(132, 130, Graphics.FONT_SMALL, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 1) {
             // PAGE 2: Sensor & Motion Diagnostics
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-            dc.drawText(width / 2, 64, Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 64, Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var accelStr = mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING";
-            dc.drawText(width / 2, 84, Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 84, Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var varStr = "CARVE VARIANCE: " + mCurrentVariance.format("%.0f");
-            dc.drawText(width / 2, 104, Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 104, Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var speedKmhStr = "GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h";
-            dc.drawText(width / 2, 124, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 124, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var pageStr = "PAGE 2/2 (UP/DN SCROLL)";
-            dc.drawText(width / 2, 142, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 142, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 }
