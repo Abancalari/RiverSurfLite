@@ -1,5 +1,4 @@
 import Toybox.Application;
-import Toybox.Graphics;
 import Toybox.WatchUi;
 
 class RiverSurfFieldApp extends Application.AppBase {
@@ -15,28 +14,9 @@ class RiverSurfFieldApp extends Application.AppBase {
     }
 
     function getInitialView() {
-        return [new RiverSurfFieldView()];
-    }
-
-}
-
-class RiverSurfFieldView extends WatchUi.WatchFace {
-
-    function initialize() {
-        WatchFace.initialize();
-    }
-
-    function onLayout(dc) {
-        setLayout(Rez.Layouts.WatchFaceLayout(dc));
-    }
-
-    function onUpdate(dc) {
-        // Update display
-        View.onUpdate(dc);
-    }
-
-    function onPartialUpdate(dc) {
-        // Partial screen updates for efficiency
+        var view = new RiverSurfView();
+        var delegate = new RiverSurfDelegate(view);
+        return [view, delegate];
     }
 
 }
