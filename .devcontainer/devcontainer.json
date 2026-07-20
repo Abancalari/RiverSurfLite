@@ -1,0 +1,16 @@
+{
+  "name": "RiverSurfLite Development",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "monkeyc-lang.monkeyc"
+      ]
+    }
+  },
+  "postCreateCommand": "apt-get update && apt-get install -y openjdk-11-jdk"
+}
