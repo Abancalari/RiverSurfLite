@@ -1,37 +1,37 @@
 {
   "datafields" : [ {
     "id" : 0,
-    "chart-visible" : true,
+    "chart-visible" : false,
     "activity-visible" : true,
     "lap-visible" : false,
-    "chart-title-key" : "WaveCount",
+    "chart-title-key" : null,
     "label-key" : "WaveCount",
     "unit-label-key" : "WavesUnit",
     "sort-order" : 0,
     "precision" : 0,
-    "fill-color" : "rgba(0, 160, 255, 1.0)"
+    "fill-color" : null
   }, {
     "id" : 1,
-    "chart-visible" : true,
+    "chart-visible" : false,
     "activity-visible" : true,
     "lap-visible" : false,
-    "chart-title-key" : "SurfTime",
+    "chart-title-key" : null,
     "label-key" : "SurfTime",
     "unit-label-key" : "SecUnit",
     "sort-order" : 1,
     "precision" : 0,
-    "fill-color" : "rgba(0, 255, 0, 1.0)"
+    "fill-color" : null
   }, {
     "id" : 2,
-    "chart-visible" : true,
+    "chart-visible" : false,
     "activity-visible" : true,
     "lap-visible" : false,
-    "chart-title-key" : "MaxSurfSpeed",
+    "chart-title-key" : null,
     "label-key" : "MaxSurfSpeed",
     "unit-label-key" : "MsUnit",
     "sort-order" : 2,
     "precision" : 1,
-    "fill-color" : "rgba(255, 85, 0, 1.0)"
+    "fill-color" : null
   }, {
     "id" : 3,
     "chart-visible" : false,
