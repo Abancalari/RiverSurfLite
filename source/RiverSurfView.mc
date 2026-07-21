@@ -163,11 +163,6 @@ class RiverSurfView extends WatchUi.View {
                 recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
             }
 
-            var liveSpeed = View.findDrawableById("LiveSpeed") as Text;
-            if (liveSpeed != null) {
-                liveSpeed.setText((mSpeed * 3.6).format("%.1f"));
-            }
-
             var gpsStatus = View.findDrawableById("GpsStatus") as Text;
             var gpsPrompt = View.findDrawableById("GpsPrompt") as Text;
             if (mGpsAccuracy >= 3) {
@@ -180,6 +175,31 @@ class RiverSurfView extends WatchUi.View {
                 if (gpsStatus != null) { gpsStatus.setText("SEARCHING GPS..."); }
                 if (gpsPrompt != null) { gpsPrompt.setText("LOOKING FOR SATELLITES"); }
             }
+
+            View.onUpdate(dc);
+
+            // Render sub-display circle: Centered "GPS" text + 4-segment signal ring
+            var subX = (dc.getWidth() * 0.807).toNumber(); // 142 on Instinct 2
+            var subY = (dc.getHeight() * 0.193).toNumber(); // 34 on Instinct 2
+            var r = (dc.getWidth() * 0.108).toNumber(); // 19px radius
+
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(subX, subY, Graphics.FONT_XTINY, "GPS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+            dc.setPenWidth(3);
+            var angles = [
+                [5, 85],     // Segment 1: Top-Right
+                [95, 175],   // Segment 2: Top-Left
+                [185, 265],  // Segment 3: Bottom-Left
+                [275, 355]   // Segment 4: Bottom-Right
+            ];
+
+            for (var i = 0; i < 4; i++) {
+                if ((i + 1) <= mGpsAccuracy) {
+                    dc.drawArc(subX, subY, r, Graphics.ARC_COUNTER_CLOCKWISE, angles[i][0], angles[i][1]);
+                }
+            }
+            dc.setPenWidth(1);
 
         } else if (mCurrentPage == 1) {
             var recLabel = View.findDrawableById("RecLabel") as Text;
@@ -216,24 +236,8 @@ class RiverSurfView extends WatchUi.View {
                 clockTime.setText(tod.hour.format("%02d") + ":" + tod.min.format("%02d"));
             }
 
-        } else if (mCurrentPage == 2) {
-            var accelStatus = View.findDrawableById("AccelStatus") as Text;
-            if (accelStatus != null) {
-                accelStatus.setText(mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING");
-            }
-
-            var varianceText = View.findDrawableById("VarianceText") as Text;
-            if (varianceText != null) {
-                varianceText.setText("CARVE VARIANCE: " + mCurrentVariance.format("%.0f"));
-            }
-
-            var gpsSpeedText = View.findDrawableById("GpsSpeedText") as Text;
-            if (gpsSpeedText != null) {
-                gpsSpeedText.setText("GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h");
-            }
+            View.onUpdate(dc);
         }
-
-        View.onUpdate(dc);
     }
 
     function compute() {
