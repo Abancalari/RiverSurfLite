@@ -1,7 +1,7 @@
 <resources>
     <!-- 1. String Definitions -->
     <strings>
-        <string id="AppName">RiverSurf</string>
+        <string id="AppName">RiverSurfLite</string>
         <string id="WaveCount">Wave Count</string>
         <string id="SurfTime">Surf Time</string>
         <string id="MaxSurfSpeed">Max Surf Speed</string>

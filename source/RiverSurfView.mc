@@ -263,30 +263,55 @@ class RiverSurfView extends WatchUi.View {
     function startSession() {
         if (mSession == null) {
             mSession = ActivityRecording.createSession({
-                :name => "River Surf",
+                :name => "River Surf Lite",
                 :sport => ActivityRecording.SPORT_SURFING,
                 :subSport => ActivityRecording.SUB_SPORT_GENERIC
             });
 
             mWaveCountField = mSession.createField(
                 "wave_count", 0, FitContributor.DATA_TYPE_UINT16,
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Waves" }
+                {
+                    :mesgType => FitContributor.MESG_TYPE_SESSION,
+                    :label => "Wave Count",
+                    :units => "waves",
+                    :count => 1
+                }
             );
             mTimeSurfingField = mSession.createField(
                 "time_surfing", 1, FitContributor.DATA_TYPE_UINT32,
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Surf Time", :units => "s" }
+                {
+                    :mesgType => FitContributor.MESG_TYPE_SESSION,
+                    :label => "Surf Time",
+                    :units => "s",
+                    :count => 1
+                }
             );
             mMaxWaveSpeedField = mSession.createField(
                 "max_wave_speed", 2, FitContributor.DATA_TYPE_FLOAT,
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Max Surf Speed", :units => "m/s" }
+                {
+                    :mesgType => FitContributor.MESG_TYPE_SESSION,
+                    :label => "Max Surf Speed",
+                    :units => "m/s",
+                    :count => 1
+                }
             );
             mLongestWaveField = mSession.createField(
                 "longest_wave_time", 3, FitContributor.DATA_TYPE_UINT16,
-                { :mesgType => FitContributor.MESG_TYPE_SESSION, :label => "Longest Wave", :units => "s" }
+                {
+                    :mesgType => FitContributor.MESG_TYPE_SESSION,
+                    :label => "Longest Wave",
+                    :units => "s",
+                    :count => 1
+                }
             );
             mWaveDurationField = mSession.createField(
                 "wave_duration", 4, FitContributor.DATA_TYPE_UINT16,
-                { :mesgType => FitContributor.MESG_TYPE_RECORD, :label => "Wave Duration", :units => "s" }
+                {
+                    :mesgType => FitContributor.MESG_TYPE_RECORD,
+                    :label => "Wave Duration",
+                    :units => "s",
+                    :count => 1
+                }
             );
 
             mSession.start();
@@ -358,23 +383,20 @@ class RiverSurfView extends WatchUi.View {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
             // ----------------------------------------------------
-            // 1. Top-Left Header Zone
+            // 1. Top-Left Header Zone (State Flag)
             // ----------------------------------------------------
-            dc.drawText(8, 8, Graphics.FONT_XTINY, "RIVER SURF", Graphics.TEXT_JUSTIFY_LEFT);
-            
             var stateLabel = "[READY]";
             if (mSession != null && mSession.isRecording()) {
                 stateLabel = "[REC]";
             }
-            dc.drawText(8, 22, Graphics.FONT_XTINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText(10, 18, Graphics.FONT_SMALL, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
             // ----------------------------------------------------
-            // 2. Sub-Window Lens (Circle Lens Fix)
+            // 2. Sub-Window Lens (Circle Lens in Top-Right)
             // ----------------------------------------------------
             var subCenterX = 138;
-            
-            dc.drawText(subCenterX, 26, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(subCenterX, 38, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(subCenterX, 16, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(subCenterX, 42, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             // ----------------------------------------------------
             // 3. Main Status Banner (Center)
@@ -387,30 +409,30 @@ class RiverSurfView extends WatchUi.View {
             }
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillRectangle(0, 58, 176, 38);
+            dc.fillRectangle(0, 68, 176, 36);
 
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(88, 77, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 86, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
             // ----------------------------------------------------
             // 4. Bottom Split Layout (Surf Time | Time of Day)
             // ----------------------------------------------------
-            dc.drawLine(88, 108, 88, 160);
+            dc.drawLine(88, 110, 88, 166);
 
-            dc.drawText(44, 110, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(44, 114, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
             
             var surfMins = mTotalSurfingTime / 60;
             var surfSecs = mTotalSurfingTime % 60;
             var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
-            dc.drawText(44, 130, Graphics.FONT_SMALL, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(44, 134, Graphics.FONT_SMALL, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
 
-            dc.drawText(132, 110, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(132, 114, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
 
             var clockTime = System.getClockTime();
             var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-            dc.drawText(132, 130, Graphics.FONT_SMALL, todString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(132, 134, Graphics.FONT_SMALL, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 1) {
             // PAGE 2: Sensor & Motion Diagnostics
