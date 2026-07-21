@@ -1,9 +1,8 @@
 <layouts>
     <layout id="LapsLayout">
-        <label id="RecLabel" x="10" y="24" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
         <!-- Sub-Window Lens Cutout: Wave Total Count -->
-        <label id="SubHeader" x="142" y="18" font="@Fonts.MicroFont" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOTAL" />
-        <label id="SubWaveCount" x="142" y="44" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="SubHeader" x="142" y="16" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOTAL" />
+        <label id="SubWaveCount" x="142" y="38" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Main Screen Area -->
         <label id="LapsHeader" x="88" y="24" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVE HISTORY" />
         <label id="LapItem1" x="88" y="65" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="NO WAVES YET" />

@@ -1,8 +1,0 @@
-<layouts>
-    <layout id="GpsLayout">
-        <label id="RecLabel" x="10" y="24" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
-        <!-- Main Screen Area -->
-        <label id="GpsStatus" x="88" y="90" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="[ SEARCHING GPS... ]" />
-        <label id="GpsPrompt" x="88" y="118" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="LOOKING FOR SATELLITES" />
-    </layout>
-</layouts>

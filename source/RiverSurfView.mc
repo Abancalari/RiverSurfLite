@@ -30,9 +30,9 @@ class RiverSurfView extends WatchUi.View {
 
     private var mState = STATE_WAITING;
 
-    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page, 2: Wave History Page)
+    // Page navigation index (0: Main Surf Activity Page, 1: Wave History Page)
     private var mCurrentPage = 0;
-    private const TOTAL_PAGES = 3;
+    private const TOTAL_PAGES = 2;
     private var mGpsAccuracy = 0;
 
     // Wave statistics
@@ -137,10 +137,8 @@ class RiverSurfView extends WatchUi.View {
     function onLayout(dc) {
         mLastPageLoaded = mCurrentPage;
         if (mCurrentPage == 0) {
-            setLayout(Rez.Layouts.GpsLayout(dc));
-        } else if (mCurrentPage == 1) {
             setLayout(Rez.Layouts.MainLayout(dc));
-        } else if (mCurrentPage == 2) {
+        } else if (mCurrentPage == 1) {
             setLayout(Rez.Layouts.LapsLayout(dc));
         }
     }
@@ -161,55 +159,6 @@ class RiverSurfView extends WatchUi.View {
         }
 
         if (mCurrentPage == 0) {
-            var recLabel = View.findDrawableById("RecLabel") as Text;
-            if (recLabel != null) {
-                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
-            }
-
-            var gpsStatus = View.findDrawableById("GpsStatus") as Text;
-            var gpsPrompt = View.findDrawableById("GpsPrompt") as Text;
-            if (mGpsAccuracy >= 3) {
-                if (gpsStatus != null) { gpsStatus.setText("[ GPS READY ]"); }
-                if (gpsPrompt != null) { gpsPrompt.setText("PRESS START TO SURF"); }
-            } else if (mGpsAccuracy == 2) {
-                if (gpsStatus != null) { gpsStatus.setText("GPS POOR (2D)"); }
-                if (gpsPrompt != null) { gpsPrompt.setText("WAITING FOR 3D LOCK..."); }
-            } else {
-                if (gpsStatus != null) { gpsStatus.setText("SEARCHING GPS..."); }
-                if (gpsPrompt != null) { gpsPrompt.setText("LOOKING FOR SATELLITES"); }
-            }
-
-            View.onUpdate(dc);
-
-            // Render sub-display circle: Centered "GPS" text + 4-segment signal ring
-            var subX = (dc.getWidth() * 0.807).toNumber(); // 142 on Instinct 2
-            var subY = (dc.getHeight() * 0.193).toNumber(); // 34 on Instinct 2
-            var r = (dc.getWidth() * 0.108).toNumber(); // 19px radius
-
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(subX, subY, Graphics.FONT_XTINY, "GPS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            dc.setPenWidth(3);
-            var angles = [
-                [5, 85],     // Segment 1: Top-Right
-                [95, 175],   // Segment 2: Top-Left
-                [185, 265],  // Segment 3: Bottom-Left
-                [275, 355]   // Segment 4: Bottom-Right
-            ];
-
-            for (var i = 0; i < 4; i++) {
-                if ((i + 1) <= mGpsAccuracy) {
-                    dc.drawArc(subX, subY, r, Graphics.ARC_COUNTER_CLOCKWISE, angles[i][0], angles[i][1]);
-                }
-            }
-            dc.setPenWidth(1);
-
-        } else if (mCurrentPage == 1) {
-            var recLabel = View.findDrawableById("RecLabel") as Text;
-            if (recLabel != null) {
-                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
-            }
-
             var waveLabel = View.findDrawableById("WaveCount") as Text;
             if (waveLabel != null) {
                 waveLabel.setText(mTotalWaves.toString());
@@ -240,10 +189,20 @@ class RiverSurfView extends WatchUi.View {
             dc.fillRectangle(0, bannerY, width, bannerH);
 
             var statusStr = "[ WAITING ]";
-            if (mState == STATE_SURFING) {
-                statusStr = "[ SURFING! ]";
-            } else if (mState == STATE_SWEPT) {
-                statusStr = "[ SWEPT ]";
+            if (mSession == null || !mSession.isRecording()) {
+                if (mGpsAccuracy < 3) {
+                    statusStr = "[ FINDING GPS ]";
+                } else {
+                    statusStr = "[ READY ]";
+                }
+            } else {
+                if (mState == STATE_SURFING) {
+                    statusStr = "[ SURFING! ]";
+                } else if (mState == STATE_SWEPT) {
+                    statusStr = "[ SWEPT ]";
+                } else {
+                    statusStr = "[ WAITING ]";
+                }
             }
 
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
@@ -253,12 +212,7 @@ class RiverSurfView extends WatchUi.View {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawLine(width / 2, (height * 0.647).toNumber(), width / 2, (height * 0.954).toNumber());
 
-        } else if (mCurrentPage == 2) {
-            var recLabel = View.findDrawableById("RecLabel") as Text;
-            if (recLabel != null) {
-                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
-            }
-
+        } else if (mCurrentPage == 1) {
             var subWaveCount = View.findDrawableById("SubWaveCount") as Text;
             if (subWaveCount != null) {
                 subWaveCount.setText(mTotalWaves.toString());

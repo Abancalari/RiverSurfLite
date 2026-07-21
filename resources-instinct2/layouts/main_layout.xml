@@ -1,13 +1,12 @@
 <layouts>
     <layout id="MainLayout">
-        <label id="RecLabel" x="10" y="26" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
         <!-- Sub-Window Circle Lens (Top-Right on Instinct 2: x=142) -->
-        <label id="SubHeader" x="142" y="18" font="@Fonts.MicroFont" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVES" />
-        <label id="WaveCount" x="142" y="44" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="SubHeader" x="142" y="16" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVES" />
+        <label id="WaveCount" x="142" y="38" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Bottom Split Area: Labels above Surf Time and TOD -->
-        <label id="SurfTimeHeader" x="44" y="120" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
+        <label id="SurfTimeHeader" x="44" y="120" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
         <label id="SurfTime" x="44" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />
-        <label id="ClockTimeHeader" x="132" y="120" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOD" />
+        <label id="ClockTimeHeader" x="132" y="120" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOD" />
         <label id="ClockTime" x="132" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="12:00" />
     </layout>
 </layouts>
