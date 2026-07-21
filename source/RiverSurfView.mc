@@ -30,9 +30,9 @@ class RiverSurfView extends WatchUi.View {
 
     private var mState = STATE_WAITING;
 
-    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page)
+    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page, 2: Wave History Page)
     private var mCurrentPage = 0;
-    private const TOTAL_PAGES = 2;
+    private const TOTAL_PAGES = 3;
     private var mGpsAccuracy = 0;
 
     // Wave statistics
@@ -42,6 +42,7 @@ class RiverSurfView extends WatchUi.View {
     private var mLongestWaveDuration = 0;
     private var mMaxWaveSpeed = 0.0;
     private var mWaveRegistered = false;
+    private var mWaveHistory = [];
 
     // Rolling buffer for accelerometer magnitude (5 seconds)
     private const BUFFER_SIZE = 5;
@@ -139,6 +140,8 @@ class RiverSurfView extends WatchUi.View {
             setLayout(Rez.Layouts.GpsLayout(dc));
         } else if (mCurrentPage == 1) {
             setLayout(Rez.Layouts.MainLayout(dc));
+        } else if (mCurrentPage == 2) {
+            setLayout(Rez.Layouts.LapsLayout(dc));
         }
     }
 
@@ -249,6 +252,56 @@ class RiverSurfView extends WatchUi.View {
             // Draw bottom split divider line between Surf Time and TOD
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawLine(width / 2, (height * 0.647).toNumber(), width / 2, (height * 0.954).toNumber());
+
+        } else if (mCurrentPage == 2) {
+            var recLabel = View.findDrawableById("RecLabel") as Text;
+            if (recLabel != null) {
+                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
+            }
+
+            var subWaveCount = View.findDrawableById("SubWaveCount") as Text;
+            if (subWaveCount != null) {
+                subWaveCount.setText(mTotalWaves.toString());
+            }
+
+            var totalCount = mWaveHistory.size();
+            var lapsHeader = View.findDrawableById("LapsHeader") as Text;
+            if (lapsHeader != null) {
+                lapsHeader.setText("WAVES (" + totalCount.toString() + ")");
+            }
+
+            var item1 = View.findDrawableById("LapItem1") as Text;
+            var item2 = View.findDrawableById("LapItem2") as Text;
+            var item3 = View.findDrawableById("LapItem3") as Text;
+
+            if (totalCount == 0) {
+                if (item1 != null) { item1.setText("NO WAVES YET"); }
+                if (item2 != null) { item2.setText(""); }
+                if (item3 != null) { item3.setText(""); }
+            } else {
+                if (item1 != null) {
+                    var idx1 = totalCount - 1;
+                    item1.setText("WAVE #" + (idx1 + 1).toString() + ": " + mWaveHistory[idx1].toString() + "s");
+                }
+                if (item2 != null) {
+                    if (totalCount >= 2) {
+                        var idx2 = totalCount - 2;
+                        item2.setText("WAVE #" + (idx2 + 1).toString() + ": " + mWaveHistory[idx2].toString() + "s");
+                    } else {
+                        item2.setText("");
+                    }
+                }
+                if (item3 != null) {
+                    if (totalCount >= 3) {
+                        var idx3 = totalCount - 3;
+                        item3.setText("WAVE #" + (idx3 + 1).toString() + ": " + mWaveHistory[idx3].toString() + "s");
+                    } else {
+                        item3.setText("");
+                    }
+                }
+            }
+
+            View.onUpdate(dc);
         }
     }
 
@@ -340,8 +393,11 @@ class RiverSurfView extends WatchUi.View {
                             if (mCurrentWaveDuration > mLongestWaveDuration) {
                                 mLongestWaveDuration = mCurrentWaveDuration;
                             }
-                            if (mWaveRegistered && mSession != null && mSession.isRecording()) {
-                                mSession.addLap();
+                            if (mWaveRegistered) {
+                                mWaveHistory.add(mCurrentWaveDuration);
+                                if (mSession != null && mSession.isRecording()) {
+                                    mSession.addLap();
+                                }
                             }
                         }
                         break;
@@ -516,6 +572,7 @@ class RiverSurfView extends WatchUi.View {
             mTotalSurfingTime = 0;
             mMaxWaveSpeed = 0.0;
             mLongestWaveDuration = 0;
+            mWaveHistory = [];
             mState = STATE_WAITING;
 
             WatchUi.pushView(summaryView, summaryDelegate, WatchUi.SLIDE_IMMEDIATE);
@@ -535,6 +592,7 @@ class RiverSurfView extends WatchUi.View {
             mTotalSurfingTime = 0;
             mMaxWaveSpeed = 0.0;
             mLongestWaveDuration = 0;
+            mWaveHistory = [];
             mState = STATE_WAITING;
         }
         WatchUi.requestUpdate();
