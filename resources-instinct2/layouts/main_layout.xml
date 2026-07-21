@@ -1,8 +1,10 @@
 <layouts>
     <layout id="MainLayout">
-        <!-- Sub-Window Circle Lens (Top-Right on Instinct 2: x=142) -->
-        <label id="SubHeader" x="142" y="16" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVES" />
-        <label id="WaveCount" x="142" y="38" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Top-Left Area: Elapsed Time Header & Value -->
+        <label id="ElapsedTimeHeader" x="10" y="16" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="ELAPSED" />
+        <label id="ElapsedTime" x="10" y="34" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="00:00" />
+        <!-- Sub-Window Circle Lens (Top-Right on Instinct 2: x=142, y=34) -->
+        <label id="WaveCount" x="142" y="34" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Bottom Split Area: Labels above Surf Time and TOD -->
         <label id="SurfTimeHeader" x="44" y="120" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
         <label id="SurfTime" x="44" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />

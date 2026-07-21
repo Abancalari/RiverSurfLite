@@ -1,7 +1,8 @@
 <layouts>
     <layout id="MainLayout">
-        <label id="SubHeader" x="50%" y="10%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVES" />
-        <label id="WaveCount" x="50%" y="22%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="ElapsedTimeHeader" x="15%" y="10%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="ELAPSED" />
+        <label id="ElapsedTime" x="15%" y="22%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="00:00" />
+        <label id="WaveCount" x="65%" y="16%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Bottom Split Area: Labels above Surf Time and TOD -->
         <label id="SurfTimeHeader" x="25%" y="67%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
         <label id="SurfTime" x="25%" y="78%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />

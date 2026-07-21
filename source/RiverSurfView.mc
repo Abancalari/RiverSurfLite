@@ -38,6 +38,7 @@ class RiverSurfView extends WatchUi.View {
     // Wave statistics
     private var mTotalWaves = 0;
     private var mTotalSurfingTime = 0;
+    private var mElapsedTime = 0;
     private var mCurrentWaveDuration = 0;
     private var mLongestWaveDuration = 0;
     private var mMaxWaveSpeed = 0.0;
@@ -128,6 +129,9 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function onTimerTick() {
+        if (mSession != null && mSession.isRecording()) {
+            mElapsedTime += 1;
+        }
         compute();
         WatchUi.requestUpdate();
     }
@@ -159,6 +163,13 @@ class RiverSurfView extends WatchUi.View {
         }
 
         if (mCurrentPage == 0) {
+            var elapsedTime = View.findDrawableById("ElapsedTime") as Text;
+            if (elapsedTime != null) {
+                var elMins = mElapsedTime / 60;
+                var elSecs = mElapsedTime % 60;
+                elapsedTime.setText(elMins.format("%02d") + ":" + elSecs.format("%02d"));
+            }
+
             var waveLabel = View.findDrawableById("WaveCount") as Text;
             if (waveLabel != null) {
                 waveLabel.setText(mTotalWaves.toString());
@@ -221,7 +232,7 @@ class RiverSurfView extends WatchUi.View {
             var totalCount = mWaveHistory.size();
             var lapsHeader = View.findDrawableById("LapsHeader") as Text;
             if (lapsHeader != null) {
-                lapsHeader.setText("WAVES (" + totalCount.toString() + ")");
+                lapsHeader.setText("HISTORY (" + totalCount.toString() + ")");
             }
 
             var item1 = View.findDrawableById("LapItem1") as Text;
@@ -235,12 +246,12 @@ class RiverSurfView extends WatchUi.View {
             } else {
                 if (item1 != null) {
                     var idx1 = totalCount - 1;
-                    item1.setText("WAVE #" + (idx1 + 1).toString() + ": " + mWaveHistory[idx1].toString() + "s");
+                    item1.setText("#" + (idx1 + 1).toString() + ": " + mWaveHistory[idx1].toString() + "s");
                 }
                 if (item2 != null) {
                     if (totalCount >= 2) {
                         var idx2 = totalCount - 2;
-                        item2.setText("WAVE #" + (idx2 + 1).toString() + ": " + mWaveHistory[idx2].toString() + "s");
+                        item2.setText("#" + (idx2 + 1).toString() + ": " + mWaveHistory[idx2].toString() + "s");
                     } else {
                         item2.setText("");
                     }
@@ -248,7 +259,7 @@ class RiverSurfView extends WatchUi.View {
                 if (item3 != null) {
                     if (totalCount >= 3) {
                         var idx3 = totalCount - 3;
-                        item3.setText("WAVE #" + (idx3 + 1).toString() + ": " + mWaveHistory[idx3].toString() + "s");
+                        item3.setText("#" + (idx3 + 1).toString() + ": " + mWaveHistory[idx3].toString() + "s");
                     } else {
                         item3.setText("");
                     }
@@ -524,6 +535,7 @@ class RiverSurfView extends WatchUi.View {
 
             mTotalWaves = 0;
             mTotalSurfingTime = 0;
+            mElapsedTime = 0;
             mMaxWaveSpeed = 0.0;
             mLongestWaveDuration = 0;
             mWaveHistory = [];
@@ -544,6 +556,7 @@ class RiverSurfView extends WatchUi.View {
             mSession = null;
             mTotalWaves = 0;
             mTotalSurfingTime = 0;
+            mElapsedTime = 0;
             mMaxWaveSpeed = 0.0;
             mLongestWaveDuration = 0;
             mWaveHistory = [];

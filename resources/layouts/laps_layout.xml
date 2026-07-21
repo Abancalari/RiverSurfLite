@@ -1,6 +1,7 @@
 <layouts>
     <layout id="LapsLayout">
-        <label id="LapsHeader" x="center" y="15%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVE HISTORY" />
+        <label id="SubWaveCount" x="80%" y="15%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="LapsHeader" x="25%" y="15%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="HISTORY" />
         <label id="LapItem1" x="center" y="35%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="NO WAVES YET" />
         <label id="LapItem2" x="center" y="52%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="" />
         <label id="LapItem3" x="center" y="69%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="" />
