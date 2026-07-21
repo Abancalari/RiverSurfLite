@@ -3,8 +3,8 @@
         <!-- Top-Left Area: Elapsed Time Header & Value (Shifted right to x=18 to prevent clipping) -->
         <label id="ElapsedTimeHeader" x="18" y="16" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="ELAPSED" />
         <label id="ElapsedTime" x="18" y="34" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="00:00" />
-        <!-- Sub-Window Circle Lens (Centered Number Font Medium on Instinct 2: x=142, y=14) -->
-        <label id="WaveCount" x="142" y="14" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Sub-Window Circle Lens (True center on Instinct 2: x=144, y=32 with VCENTER) -->
+        <label id="WaveCount" x="144" y="32" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Bottom Split Area: Labels above Surf Time and Clock Time -->
         <label id="SurfTimeHeader" x="44" y="120" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
         <label id="SurfTime" x="44" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />
