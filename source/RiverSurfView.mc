@@ -288,7 +288,7 @@ class RiverSurfView extends WatchUi.View {
     function startSession() {
         if (mSession == null) {
             mSession = ActivityRecording.createSession({
-                :name => "River Surf Lite",
+                :name => "River Surfing",
                 :sport => ActivityRecording.SPORT_SURFING,
                 :subSport => ActivityRecording.SUB_SPORT_GENERIC
             });
