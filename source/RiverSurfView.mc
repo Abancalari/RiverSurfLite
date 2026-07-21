@@ -30,9 +30,10 @@ class RiverSurfView extends WatchUi.View {
 
     private var mState = STATE_WAITING;
 
-    // Page navigation index (0: Primary Page, 1: Diagnostics Page)
+    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page, 2: Diagnostics Page)
     private var mCurrentPage = 0;
-    private const TOTAL_PAGES = 2;
+    private const TOTAL_PAGES = 3;
+    private var mGpsAccuracy = 0;
 
     // Wave statistics
     private var mTotalWaves = 0;
@@ -115,8 +116,13 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function onPosition(info as Position.Info) as Void {
-        if (info != null && info.speed != null) {
-            mSpeed = info.speed;
+        if (info != null) {
+            if (info.speed != null) {
+                mSpeed = info.speed;
+            }
+            if (info.accuracy != null) {
+                mGpsAccuracy = info.accuracy;
+            }
         }
     }
 
@@ -272,6 +278,7 @@ class RiverSurfView extends WatchUi.View {
     function onStartStopPressed() {
         if (mSession == null) {
             startSession();
+            mCurrentPage = 1;
         } else if (mSession.isRecording()) {
             mSession.stop();
             showPauseMenu();
@@ -437,31 +444,66 @@ class RiverSurfView extends WatchUi.View {
 
     function onUpdate(dc) {
         if (mCurrentPage == 0) {
-            // 1. Black Background
+            // ----------------------------------------------------
+            // PAGE 1/3: GPS Lock & Satellite Status Page
+            // ----------------------------------------------------
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
             dc.clear();
-
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
+            // Top Header Flag
+            var recLabel = (mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]";
+            dc.drawText(10, 24, Graphics.FONT_TINY, recLabel, Graphics.TEXT_JUSTIFY_LEFT);
+
+            // Sub-Window Lens (Top-Right Circle): Live Speed
+            var subCenterX = 142;
+            dc.drawText(subCenterX, 18, Graphics.FONT_XTINY, "KM/H", Graphics.TEXT_JUSTIFY_CENTER);
+            var liveSpeedStr = (mSpeed * 3.6).format("%.1f");
+            dc.drawText(subCenterX, 42, Graphics.FONT_MEDIUM, liveSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+            // Main Center GPS Status Box
+            if (mGpsAccuracy >= 3) { // 3: QUALITY_USABLE, 4: QUALITY_GOOD
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+                dc.fillRectangle(0, 72, 176, 36);
+
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(88, 90, Graphics.FONT_MEDIUM, "[ GPS READY ]", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(88, 118, Graphics.FONT_XTINY, "PRESS START TO SURF", Graphics.TEXT_JUSTIFY_CENTER);
+            } else if (mGpsAccuracy == 2) { // 2: QUALITY_POOR (2D)
+                dc.drawRectangle(10, 72, 156, 36);
+                dc.drawText(88, 90, Graphics.FONT_TINY, "GPS POOR (2D)", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText(88, 118, Graphics.FONT_XTINY, "WAITING FOR 3D LOCK...", Graphics.TEXT_JUSTIFY_CENTER);
+            } else {
+                dc.drawRectangle(10, 72, 156, 36);
+                dc.drawText(88, 90, Graphics.FONT_TINY, "SEARCHING GPS...", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText(88, 118, Graphics.FONT_XTINY, "LOOKING FOR SATELLITES", Graphics.TEXT_JUSTIFY_CENTER);
+            }
+
+            dc.drawText(88, 148, Graphics.FONT_XTINY, "PAGE 1/3 (DN FOR SURF)", Graphics.TEXT_JUSTIFY_CENTER);
+
+        } else if (mCurrentPage == 1) {
             // ----------------------------------------------------
-            // 1. Top-Left Header Zone (State Flag)
+            // PAGE 2/3: Primary Surf Activity Page
             // ----------------------------------------------------
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+            // Top-Left Header Zone
             var stateLabel = "[READY]";
             if (mSession != null && mSession.isRecording()) {
                 stateLabel = "[REC]";
             }
             dc.drawText(10, 26, Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
-            // ----------------------------------------------------
-            // 2. Sub-Window Lens (Circle Lens in Top-Right)
-            // ----------------------------------------------------
+            // Sub-Window Lens (Circle Lens in Top-Right)
             var subCenterX = 142;
             dc.drawText(subCenterX, 20, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(subCenterX, 44, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            // ----------------------------------------------------
-            // 3. Main Status Banner (Center)
-            // ----------------------------------------------------
+            // Main Status Banner (Center)
             var statusText = "[ WAITING ]";
             if (mState == STATE_SURFING) {
                 statusText = "[ SURFING! ]";
@@ -477,9 +519,7 @@ class RiverSurfView extends WatchUi.View {
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-            // ----------------------------------------------------
-            // 4. Bottom Split Layout (Surf Time | Time of Day)
-            // ----------------------------------------------------
+            // Bottom Split Layout (Surf Time | Time of Day)
             dc.drawLine(88, 114, 88, 168);
 
             dc.drawText(44, 118, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
@@ -495,8 +535,10 @@ class RiverSurfView extends WatchUi.View {
             var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
             dc.drawText(132, 138, Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
-        } else if (mCurrentPage == 1) {
-            // PAGE 2: Sensor & Motion Diagnostics
+        } else if (mCurrentPage == 2) {
+            // ----------------------------------------------------
+            // PAGE 3/3: Sensor & Motion Diagnostics
+            // ----------------------------------------------------
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
             dc.clear();
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -512,7 +554,7 @@ class RiverSurfView extends WatchUi.View {
             var speedKmhStr = "GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h";
             dc.drawText(88, 124, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-            var pageStr = "PAGE 2/2 (UP/DN SCROLL)";
+            var pageStr = "PAGE 3/3 (UP/DN SCROLL)";
             dc.drawText(88, 142, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
