@@ -571,9 +571,9 @@ class RiverSurfView extends WatchUi.View {
             var menu = new WatchUi.Menu();
             menu.setTitle("Session Menu");
             menu.addItem("Resume", :itemResume);
-            menu.addItem("Diagnostics", :itemDiag);
             menu.addItem("Save", :itemSave);
             menu.addItem("Discard", :itemDiscard);
+            menu.addItem("Diagnostics", :itemDiag);
 
             WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
         }

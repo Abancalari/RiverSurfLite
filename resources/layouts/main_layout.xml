@@ -2,11 +2,11 @@
     <layout id="MainLayout">
         <label id="ElapsedTimeHeader" x="20%" y="10%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="ELAPSED" />
         <label id="ElapsedTime" x="20%" y="22%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="00:00" />
-        <label id="WaveCount" x="65%" y="14%" font="Graphics.FONT_LARGE" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
-        <!-- Bottom Split Area: Labels above Surf Time and TOD -->
+        <label id="WaveCount" x="65%" y="10%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Bottom Split Area: Labels above Surf Time and Clock Time -->
         <label id="SurfTimeHeader" x="25%" y="67%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
         <label id="SurfTime" x="25%" y="78%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />
-        <label id="ClockTimeHeader" x="75%" y="67%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOD" />
+        <label id="ClockTimeHeader" x="75%" y="67%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TIME" />
         <label id="ClockTime" x="75%" y="78%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="12:00" />
     </layout>
 </layouts>
