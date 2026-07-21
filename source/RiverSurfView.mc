@@ -389,7 +389,7 @@ class RiverSurfView extends WatchUi.View {
             if (mSession != null && mSession.isRecording()) {
                 stateLabel = "[REC]";
             }
-            dc.drawText(10, 18, Graphics.FONT_SMALL, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText(10, 18, Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
             // ----------------------------------------------------
             // 2. Sub-Window Lens (Circle Lens in Top-Right)
@@ -426,13 +426,13 @@ class RiverSurfView extends WatchUi.View {
             var surfMins = mTotalSurfingTime / 60;
             var surfSecs = mTotalSurfingTime % 60;
             var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
-            dc.drawText(44, 134, Graphics.FONT_SMALL, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(44, 134, Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
 
             dc.drawText(132, 114, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
 
             var clockTime = System.getClockTime();
             var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-            dc.drawText(132, 134, Graphics.FONT_SMALL, todString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(132, 134, Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 1) {
             // PAGE 2: Sensor & Motion Diagnostics
