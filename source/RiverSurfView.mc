@@ -251,16 +251,38 @@ class RiverSurfView extends WatchUi.View {
         }
     }
 
-    // Session Management
-    function toggleRecording() {
+    private var mMenuOpen = false;
+
+    // Session Management & Menu Controls
+    function onStartStopPressed() {
         if (mSession == null) {
             startSession();
         } else if (mSession.isRecording()) {
             mSession.stop();
+            showPauseMenu();
         } else {
-            mSession.start();
+            if (!mMenuOpen) {
+                showPauseMenu();
+            } else {
+                resumeSession();
+            }
         }
         WatchUi.requestUpdate();
+    }
+
+    function onBackPressed() {
+        if (mSession != null) {
+            if (mSession.isRecording()) {
+                mSession.stop();
+            }
+            showPauseMenu();
+            return true;
+        }
+        return false;
+    }
+
+    function toggleRecording() {
+        onStartStopPressed();
     }
 
     function startSession() {
@@ -321,6 +343,15 @@ class RiverSurfView extends WatchUi.View {
         } else if (!mSession.isRecording()) {
             mSession.start();
         }
+        mMenuOpen = false;
+        WatchUi.requestUpdate();
+    }
+
+    function resumeSession() {
+        mMenuOpen = false;
+        if (mSession != null && !mSession.isRecording()) {
+            mSession.start();
+        }
         WatchUi.requestUpdate();
     }
 
@@ -333,6 +364,7 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function saveSession() {
+        mMenuOpen = false;
         if (mSession != null) {
             // Flush final FIT field values right before stopping and saving
             updateFitFields();
@@ -352,6 +384,7 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function discardSession() {
+        mMenuOpen = false;
         if (mSession != null) {
             if (mSession.isRecording()) {
                 mSession.stop();
@@ -368,13 +401,16 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function showPauseMenu() {
-        var menu = new WatchUi.Menu();
-        menu.setTitle("Session Menu");
-        menu.addItem("Resume", :itemResume);
-        menu.addItem("Save", :itemSave);
-        menu.addItem("Discard", :itemDiscard);
+        if (!mMenuOpen) {
+            mMenuOpen = true;
+            var menu = new WatchUi.Menu();
+            menu.setTitle("Session Menu");
+            menu.addItem("Resume", :itemResume);
+            menu.addItem("Save", :itemSave);
+            menu.addItem("Discard", :itemDiscard);
 
-        WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
+            WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
+        }
     }
 
     function onUpdate(dc) {

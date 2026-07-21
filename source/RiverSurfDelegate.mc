@@ -9,10 +9,10 @@ class RiverSurfDelegate extends WatchUi.BehaviorDelegate {
         mView = view;
     }
 
-    // Start/Stop button
+    // Top-Right / Select Button (Start/Pause/Menu)
     function onSelect() {
         if (mView != null) {
-            mView.toggleRecording();
+            mView.onStartStopPressed();
         }
         return true;
     }
@@ -33,13 +33,10 @@ class RiverSurfDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    // Back button (Pause Menu)
+    // Back button (Pause / Resume Menu toggle)
     function onBack() {
         if (mView != null) {
-            if (mView.isRecording() || mView.hasSession()) {
-                mView.showPauseMenu();
-                return true;
-            }
+            return mView.onBackPressed();
         }
         return false;
     }
@@ -54,22 +51,14 @@ class RiverSurfMenuDelegate extends WatchUi.MenuInputDelegate {
     }
 
     function onMenuItem(item) {
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-
-        if (item == :itemResume) {
-            if (mView != null) {
-                mView.startSession();
-            }
-        } else if (item == :itemSave) {
-            if (mView != null) {
+        if (mView != null) {
+            if (item == :itemResume) {
+                mView.resumeSession();
+            } else if (item == :itemSave) {
                 mView.saveSession();
-            }
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        } else if (item == :itemDiscard) {
-            if (mView != null) {
+            } else if (item == :itemDiscard) {
                 mView.discardSession();
             }
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         }
     }
 }
