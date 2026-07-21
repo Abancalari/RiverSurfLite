@@ -131,6 +131,19 @@ class RiverSurfView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    private var mLastPageLoaded = -1;
+
+    function onLayout(dc) {
+        mLastPageLoaded = mCurrentPage;
+        if (mCurrentPage == 0) {
+            setLayout(Rez.Layouts.GpsLayout(dc));
+        } else if (mCurrentPage == 1) {
+            setLayout(Rez.Layouts.MainLayout(dc));
+        } else if (mCurrentPage == 2) {
+            setLayout(Rez.Layouts.DiagLayout(dc));
+        }
+    }
+
     function nextPage() {
         mCurrentPage = (mCurrentPage + 1) % TOTAL_PAGES;
         WatchUi.requestUpdate();
@@ -139,6 +152,90 @@ class RiverSurfView extends WatchUi.View {
     function previousPage() {
         mCurrentPage = (mCurrentPage - 1 + TOTAL_PAGES) % TOTAL_PAGES;
         WatchUi.requestUpdate();
+    }
+
+    function onUpdate(dc) {
+        if (mLastPageLoaded != mCurrentPage) {
+            onLayout(dc);
+        }
+
+        if (mCurrentPage == 0) {
+            var recLabel = View.findDrawableById("RecLabel") as Text;
+            if (recLabel != null) {
+                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
+            }
+
+            var liveSpeed = View.findDrawableById("LiveSpeed") as Text;
+            if (liveSpeed != null) {
+                liveSpeed.setText((mSpeed * 3.6).format("%.1f"));
+            }
+
+            var gpsStatus = View.findDrawableById("GpsStatus") as Text;
+            var gpsPrompt = View.findDrawableById("GpsPrompt") as Text;
+            if (mGpsAccuracy >= 3) {
+                if (gpsStatus != null) { gpsStatus.setText("[ GPS READY ]"); }
+                if (gpsPrompt != null) { gpsPrompt.setText("PRESS START TO SURF"); }
+            } else if (mGpsAccuracy == 2) {
+                if (gpsStatus != null) { gpsStatus.setText("GPS POOR (2D)"); }
+                if (gpsPrompt != null) { gpsPrompt.setText("WAITING FOR 3D LOCK..."); }
+            } else {
+                if (gpsStatus != null) { gpsStatus.setText("SEARCHING GPS..."); }
+                if (gpsPrompt != null) { gpsPrompt.setText("LOOKING FOR SATELLITES"); }
+            }
+
+        } else if (mCurrentPage == 1) {
+            var recLabel = View.findDrawableById("RecLabel") as Text;
+            if (recLabel != null) {
+                recLabel.setText((mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]");
+            }
+
+            var waveLabel = View.findDrawableById("WaveCount") as Text;
+            if (waveLabel != null) {
+                waveLabel.setText(mTotalWaves.toString());
+            }
+
+            var statusText = View.findDrawableById("StatusText") as Text;
+            if (statusText != null) {
+                if (mState == STATE_SURFING) {
+                    statusText.setText("[ SURFING! ]");
+                } else if (mState == STATE_SWEPT) {
+                    statusText.setText("[ SWEPT ]");
+                } else {
+                    statusText.setText("[ WAITING ]");
+                }
+            }
+
+            var surfTime = View.findDrawableById("SurfTime") as Text;
+            if (surfTime != null) {
+                var surfMins = mTotalSurfingTime / 60;
+                var surfSecs = mTotalSurfingTime % 60;
+                surfTime.setText(surfMins.format("%02d") + ":" + surfSecs.format("%02d"));
+            }
+
+            var clockTime = View.findDrawableById("ClockTime") as Text;
+            if (clockTime != null) {
+                var tod = System.getClockTime();
+                clockTime.setText(tod.hour.format("%02d") + ":" + tod.min.format("%02d"));
+            }
+
+        } else if (mCurrentPage == 2) {
+            var accelStatus = View.findDrawableById("AccelStatus") as Text;
+            if (accelStatus != null) {
+                accelStatus.setText(mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING");
+            }
+
+            var varianceText = View.findDrawableById("VarianceText") as Text;
+            if (varianceText != null) {
+                varianceText.setText("CARVE VARIANCE: " + mCurrentVariance.format("%.0f"));
+            }
+
+            var gpsSpeedText = View.findDrawableById("GpsSpeedText") as Text;
+            if (gpsSpeedText != null) {
+                gpsSpeedText.setText("GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h");
+            }
+        }
+
+        View.onUpdate(dc);
     }
 
     function compute() {
@@ -439,138 +536,6 @@ class RiverSurfView extends WatchUi.View {
             menu.addItem("Discard", :itemDiscard);
 
             WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
-        }
-    }
-
-    function onUpdate(dc) {
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-        var centerX = width / 2;
-        var centerY = height / 2;
-        var subCenterX = (width * 0.807).toNumber(); // 142 on 176px Instinct 2
-
-        if (mCurrentPage == 0) {
-            // ----------------------------------------------------
-            // PAGE 1/3: GPS Lock & Satellite Status Page
-            // ----------------------------------------------------
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.clear();
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-            // Top Header Flag
-            var recLabel = (mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]";
-            dc.drawText((width * 0.057).toNumber(), (height * 0.136).toNumber(), Graphics.FONT_TINY, recLabel, Graphics.TEXT_JUSTIFY_LEFT);
-
-            // Sub-Window Lens (Top-Right Circle): Live Speed
-            dc.drawText(subCenterX, (height * 0.102).toNumber(), Graphics.FONT_XTINY, "KM/H", Graphics.TEXT_JUSTIFY_CENTER);
-            var liveSpeedStr = (mSpeed * 3.6).format("%.1f");
-            dc.drawText(subCenterX, (height * 0.238).toNumber(), Graphics.FONT_MEDIUM, liveSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            // Main Center GPS Status Box
-            var boxY = (height * 0.409).toNumber();
-            var boxH = (height * 0.204).toNumber();
-
-            if (mGpsAccuracy >= 3) { // 3: QUALITY_USABLE, 4: QUALITY_GOOD
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-                dc.fillRectangle(0, boxY, width, boxH);
-
-                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_MEDIUM, "[ GPS READY ]", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "PRESS START TO SURF", Graphics.TEXT_JUSTIFY_CENTER);
-            } else if (mGpsAccuracy == 2) { // 2: QUALITY_POOR (2D)
-                dc.drawRectangle(10, boxY, width - 20, boxH);
-                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_TINY, "GPS POOR (2D)", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "WAITING FOR 3D LOCK...", Graphics.TEXT_JUSTIFY_CENTER);
-            } else {
-                dc.drawRectangle(10, boxY, width - 20, boxH);
-                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_TINY, "SEARCHING GPS...", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "LOOKING FOR SATELLITES", Graphics.TEXT_JUSTIFY_CENTER);
-            }
-
-            dc.drawText(centerX, (height * 0.84).toNumber(), Graphics.FONT_XTINY, "PAGE 1/3 (DN FOR SURF)", Graphics.TEXT_JUSTIFY_CENTER);
-
-        } else if (mCurrentPage == 1) {
-            // ----------------------------------------------------
-            // PAGE 2/3: Primary Surf Activity Page
-            // ----------------------------------------------------
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.clear();
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-            // Top-Left Header Zone
-            var stateLabel = "[READY]";
-            if (mSession != null && mSession.isRecording()) {
-                stateLabel = "[REC]";
-            }
-            dc.drawText((width * 0.057).toNumber(), (height * 0.147).toNumber(), Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
-
-            // Sub-Window Lens (Circle Lens in Top-Right)
-            dc.drawText(subCenterX, (height * 0.113).toNumber(), Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(subCenterX, (height * 0.25).toNumber(), Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            // Main Status Banner (Center)
-            var statusText = "[ WAITING ]";
-            if (mState == STATE_SURFING) {
-                statusText = "[ SURFING! ]";
-            } else if (mState == STATE_SWEPT) {
-                statusText = "[ SWEPT ]";
-            }
-
-            var bannerY = (height * 0.432).toNumber();
-            var bannerH = (height * 0.193).toNumber();
-
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillRectangle(0, bannerY, width, bannerH);
-
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(centerX, bannerY + bannerH / 2, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-            // Bottom Split Layout (Surf Time | Time of Day)
-            var lineY1 = (height * 0.647).toNumber();
-            var lineY2 = (height * 0.954).toNumber();
-            dc.drawLine(centerX, lineY1, centerX, lineY2);
-
-            var leftX = (width * 0.25).toNumber();
-            var rightX = (width * 0.75).toNumber();
-
-            dc.drawText(leftX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
-            
-            var surfMins = mTotalSurfingTime / 60;
-            var surfSecs = mTotalSurfingTime % 60;
-            var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
-            dc.drawText(leftX, (height * 0.784).toNumber(), Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
-
-            dc.drawText(rightX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
-
-            var clockTime = System.getClockTime();
-            var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-            dc.drawText(rightX, (height * 0.784).toNumber(), Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
-
-        } else if (mCurrentPage == 2) {
-            // ----------------------------------------------------
-            // PAGE 3/3: Sensor & Motion Diagnostics
-            // ----------------------------------------------------
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.clear();
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-            dc.drawText(centerX, (height * 0.363).toNumber(), Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            var accelStr = mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING";
-            dc.drawText(centerX, (height * 0.477).toNumber(), Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            var varStr = "CARVE VARIANCE: " + mCurrentVariance.format("%.0f");
-            dc.drawText(centerX, (height * 0.59).toNumber(), Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            var speedKmhStr = "GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h";
-            dc.drawText(centerX, (height * 0.704).toNumber(), Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            var pageStr = "PAGE 3/3 (UP/DN SCROLL)";
-            dc.drawText(centerX, (height * 0.806).toNumber(), Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 }

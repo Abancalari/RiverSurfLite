@@ -17,50 +17,34 @@ class RiverSurfSummaryView extends WatchUi.View {
         mMaxSpeed = maxSpeed;
     }
 
+    function onLayout(dc) {
+        setLayout(Rez.Layouts.SummaryLayout(dc));
+    }
+
     function onUpdate(dc) {
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-        var centerX = width / 2;
+        var wavesLabel = View.findDrawableById("TotalWaves") as Text;
+        if (wavesLabel != null) {
+            wavesLabel.setText(mWaves.toString());
+        }
 
-        // Black background
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
+        var timeLabel = View.findDrawableById("SurfTime") as Text;
+        if (timeLabel != null) {
+            var mins = mSurfTime / 60;
+            var secs = mSurfTime % 60;
+            timeLabel.setText(mins.format("%02d") + ":" + secs.format("%02d"));
+        }
 
-        // Top Banner
-        var bannerY = (height * 0.057).toNumber();
-        var bannerH = (height * 0.159).toNumber();
+        var longestLabel = View.findDrawableById("LongestWave") as Text;
+        if (longestLabel != null) {
+            longestLabel.setText(mLongestWave.toString() + "s");
+        }
 
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-        dc.fillRectangle(0, bannerY, width, bannerH);
+        var maxSpeedLabel = View.findDrawableById("MaxSpeed") as Text;
+        if (maxSpeedLabel != null) {
+            maxSpeedLabel.setText("MAX: " + (mMaxSpeed * 3.6).format("%.1f") + " km/h");
+        }
 
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, bannerY + bannerH / 2, Graphics.FONT_MEDIUM, "SURF SAVED", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-        // 1. Total Waves
-        dc.drawText(centerX, (height * 0.25).toNumber(), Graphics.FONT_XTINY, "TOTAL WAVES", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(centerX, (height * 0.35).toNumber(), Graphics.FONT_MEDIUM, mWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-
-        // 2. Surf Time (Left Split)
-        var leftX = (width * 0.25).toNumber();
-        var mins = mSurfTime / 60;
-        var secs = mSurfTime % 60;
-        var timeStr = mins.format("%02d") + ":" + secs.format("%02d");
-        dc.drawText(leftX, (height * 0.545).toNumber(), Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(leftX, (height * 0.636).toNumber(), Graphics.FONT_TINY, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // 3. Longest Wave (Right Split)
-        var rightX = (width * 0.75).toNumber();
-        dc.drawText(rightX, (height * 0.545).toNumber(), Graphics.FONT_XTINY, "LONGEST", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(rightX, (height * 0.636).toNumber(), Graphics.FONT_TINY, mLongestWave.toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-
-        // 4. Max Speed
-        var speedKmh = (mMaxSpeed * 3.6).format("%.1f") + " km/h";
-        dc.drawText(centerX, (height * 0.761).toNumber(), Graphics.FONT_XTINY, "MAX: " + speedKmh, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Footer hint
-        dc.drawText(centerX, (height * 0.875).toNumber(), Graphics.FONT_XTINY, "[ PRESS KEY TO EXIT ]", Graphics.TEXT_JUSTIFY_CENTER);
+        View.onUpdate(dc);
     }
 }
 

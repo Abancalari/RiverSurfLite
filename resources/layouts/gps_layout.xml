@@ -1,0 +1,10 @@
+<layouts>
+    <layout id="GpsLayout">
+        <label id="RecLabel" x="10%" y="15%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
+        <label id="SubHeader" x="50%" y="10%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="KM/H" />
+        <label id="LiveSpeed" x="50%" y="22%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.0" />
+        <label id="GpsStatus" x="center" y="48%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="[ SEARCHING GPS... ]" />
+        <label id="GpsPrompt" x="center" y="65%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="LOOKING FOR SATELLITES" />
+        <label id="PageIndicator" x="center" y="84%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="PAGE 1/3 (DN FOR SURF)" />
+    </layout>
+</layouts>

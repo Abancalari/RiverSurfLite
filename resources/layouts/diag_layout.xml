@@ -1,0 +1,9 @@
+<layouts>
+    <layout id="DiagLayout">
+        <label id="DiagHeader" x="center" y="36%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="DIAGNOSTICS" />
+        <label id="AccelStatus" x="center" y="47%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="ACCEL: WAITING" />
+        <label id="VarianceText" x="center" y="59%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="CARVE VARIANCE: 0" />
+        <label id="GpsSpeedText" x="center" y="70%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="GPS SPEED: 0.0 km/h" />
+        <label id="PageIndicator" x="center" y="80%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="PAGE 3/3 (UP/DN SCROLL)" />
+    </layout>
+</layouts>

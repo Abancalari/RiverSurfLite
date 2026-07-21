@@ -1,0 +1,12 @@
+<layouts>
+    <layout id="MainLayout">
+        <label id="RecLabel" x="10" y="26" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
+        <!-- Sub-Window Circle Lens (Top-Right on Instinct 2: x=142) -->
+        <label id="SubHeader" x="142" y="20" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="WAVES" />
+        <label id="WaveCount" x="142" y="44" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Main Screen Area -->
+        <label id="StatusText" x="88" y="93" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="[ WAITING ]" />
+        <label id="SurfTime" x="44" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />
+        <label id="ClockTime" x="132" y="138" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="12:00" />
+    </layout>
+</layouts>

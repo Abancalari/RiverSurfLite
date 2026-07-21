@@ -1,0 +1,13 @@
+<layouts>
+    <layout id="SummaryLayout">
+        <label id="SummaryTitle" x="center" y="13%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF SAVED" />
+        <label id="WavesHeader" x="center" y="25%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="TOTAL WAVES" />
+        <label id="TotalWaves" x="center" y="35%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="SurfTimeHeader" x="25%" y="54%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="SURF TIME" />
+        <label id="SurfTime" x="25%" y="63%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00" />
+        <label id="LongestHeader" x="75%" y="54%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="LONGEST" />
+        <label id="LongestWave" x="75%" y="63%" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0s" />
+        <label id="MaxSpeed" x="center" y="76%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="MAX: 0.0 km/h" />
+        <label id="ExitHint" x="center" y="87%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="[ PRESS KEY TO EXIT ]" />
+    </layout>
+</layouts>
