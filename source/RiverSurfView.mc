@@ -4,6 +4,7 @@ import Toybox.Activity;
 import Toybox.ActivityRecording;
 import Toybox.FitContributor;
 import Toybox.Sensor;
+import Toybox.Position;
 import Toybox.Math;
 import Toybox.Timer;
 import Toybox.System;
@@ -99,10 +100,24 @@ class RiverSurfView extends WatchUi.View {
 
     function onShow() {
         mTimer.start(method(:onTimerTick), 1000, true);
+        try {
+            Position.enableLocationEvents(Position.LOCATION_CONTINUOUS, method(:onPosition));
+        } catch (e) {
+        }
     }
 
     function onHide() {
         mTimer.stop();
+        try {
+            Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition));
+        } catch (e) {
+        }
+    }
+
+    function onPosition(info as Position.Info) as Void {
+        if (info != null && info.speed != null) {
+            mSpeed = info.speed;
+        }
     }
 
     function onTimerTick() {
