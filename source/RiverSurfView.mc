@@ -232,7 +232,7 @@ class RiverSurfView extends WatchUi.View {
             var totalCount = mWaveHistory.size();
             var lapsHeader = View.findDrawableById("LapsHeader") as Text;
             if (lapsHeader != null) {
-                lapsHeader.setText("HISTORY (" + totalCount.toString() + ")");
+                lapsHeader.setText("WAVES:");
             }
 
             var item1 = View.findDrawableById("LapItem1") as Text;

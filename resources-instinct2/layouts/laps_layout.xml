@@ -1,9 +1,9 @@
 <layouts>
     <layout id="LapsLayout">
-        <!-- Sub-Window Lens Cutout: Centered Number on Instinct 2: x=142, y=34 -->
-        <label id="SubWaveCount" x="142" y="34" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
-        <!-- Main Screen Area: Left-aligned title at x=10 to avoid subwindow overlap -->
-        <label id="LapsHeader" x="10" y="20" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="HISTORY" />
+        <!-- Sub-Window Lens Cutout: Uniform Centered Large Number (x=142, y=20) -->
+        <label id="SubWaveCount" x="142" y="20" font="Graphics.FONT_LARGE" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Main Screen Area: Prominent title "WAVES:" at x=18, y=20 -->
+        <label id="LapsHeader" x="18" y="20" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="WAVES:" />
         <label id="LapItem1" x="88" y="65" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="NO WAVES YET" />
         <label id="LapItem2" x="88" y="95" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="" />
         <label id="LapItem3" x="88" y="125" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="" />
