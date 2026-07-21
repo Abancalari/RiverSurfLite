@@ -443,6 +443,12 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function onUpdate(dc) {
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+        var centerX = width / 2;
+        var centerY = height / 2;
+        var subCenterX = (width * 0.807).toNumber(); // 142 on 176px Instinct 2
+
         if (mCurrentPage == 0) {
             // ----------------------------------------------------
             // PAGE 1/3: GPS Lock & Satellite Status Page
@@ -453,35 +459,37 @@ class RiverSurfView extends WatchUi.View {
 
             // Top Header Flag
             var recLabel = (mSession != null && mSession.isRecording()) ? "[REC]" : "[READY]";
-            dc.drawText(10, 24, Graphics.FONT_TINY, recLabel, Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText((width * 0.057).toNumber(), (height * 0.136).toNumber(), Graphics.FONT_TINY, recLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
             // Sub-Window Lens (Top-Right Circle): Live Speed
-            var subCenterX = 142;
-            dc.drawText(subCenterX, 18, Graphics.FONT_XTINY, "KM/H", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(subCenterX, (height * 0.102).toNumber(), Graphics.FONT_XTINY, "KM/H", Graphics.TEXT_JUSTIFY_CENTER);
             var liveSpeedStr = (mSpeed * 3.6).format("%.1f");
-            dc.drawText(subCenterX, 42, Graphics.FONT_MEDIUM, liveSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(subCenterX, (height * 0.238).toNumber(), Graphics.FONT_MEDIUM, liveSpeedStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             // Main Center GPS Status Box
+            var boxY = (height * 0.409).toNumber();
+            var boxH = (height * 0.204).toNumber();
+
             if (mGpsAccuracy >= 3) { // 3: QUALITY_USABLE, 4: QUALITY_GOOD
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-                dc.fillRectangle(0, 72, 176, 36);
+                dc.fillRectangle(0, boxY, width, boxH);
 
                 dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(88, 90, Graphics.FONT_MEDIUM, "[ GPS READY ]", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_MEDIUM, "[ GPS READY ]", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(88, 118, Graphics.FONT_XTINY, "PRESS START TO SURF", Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "PRESS START TO SURF", Graphics.TEXT_JUSTIFY_CENTER);
             } else if (mGpsAccuracy == 2) { // 2: QUALITY_POOR (2D)
-                dc.drawRectangle(10, 72, 156, 36);
-                dc.drawText(88, 90, Graphics.FONT_TINY, "GPS POOR (2D)", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-                dc.drawText(88, 118, Graphics.FONT_XTINY, "WAITING FOR 3D LOCK...", Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawRectangle(10, boxY, width - 20, boxH);
+                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_TINY, "GPS POOR (2D)", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "WAITING FOR 3D LOCK...", Graphics.TEXT_JUSTIFY_CENTER);
             } else {
-                dc.drawRectangle(10, 72, 156, 36);
-                dc.drawText(88, 90, Graphics.FONT_TINY, "SEARCHING GPS...", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-                dc.drawText(88, 118, Graphics.FONT_XTINY, "LOOKING FOR SATELLITES", Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawRectangle(10, boxY, width - 20, boxH);
+                dc.drawText(centerX, boxY + boxH / 2, Graphics.FONT_TINY, "SEARCHING GPS...", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText(centerX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "LOOKING FOR SATELLITES", Graphics.TEXT_JUSTIFY_CENTER);
             }
 
-            dc.drawText(88, 148, Graphics.FONT_XTINY, "PAGE 1/3 (DN FOR SURF)", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, (height * 0.84).toNumber(), Graphics.FONT_XTINY, "PAGE 1/3 (DN FOR SURF)", Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 1) {
             // ----------------------------------------------------
@@ -496,12 +504,11 @@ class RiverSurfView extends WatchUi.View {
             if (mSession != null && mSession.isRecording()) {
                 stateLabel = "[REC]";
             }
-            dc.drawText(10, 26, Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText((width * 0.057).toNumber(), (height * 0.147).toNumber(), Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
             // Sub-Window Lens (Circle Lens in Top-Right)
-            var subCenterX = 142;
-            dc.drawText(subCenterX, 20, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(subCenterX, 44, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(subCenterX, (height * 0.113).toNumber(), Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(subCenterX, (height * 0.25).toNumber(), Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             // Main Status Banner (Center)
             var statusText = "[ WAITING ]";
@@ -511,29 +518,37 @@ class RiverSurfView extends WatchUi.View {
                 statusText = "[ SWEPT ]";
             }
 
+            var bannerY = (height * 0.432).toNumber();
+            var bannerH = (height * 0.193).toNumber();
+
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillRectangle(0, 76, 176, 34);
+            dc.fillRectangle(0, bannerY, width, bannerH);
 
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(88, 93, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, bannerY + bannerH / 2, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
             // Bottom Split Layout (Surf Time | Time of Day)
-            dc.drawLine(88, 114, 88, 168);
+            var lineY1 = (height * 0.647).toNumber();
+            var lineY2 = (height * 0.954).toNumber();
+            dc.drawLine(centerX, lineY1, centerX, lineY2);
 
-            dc.drawText(44, 118, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            var leftX = (width * 0.25).toNumber();
+            var rightX = (width * 0.75).toNumber();
+
+            dc.drawText(leftX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
             
             var surfMins = mTotalSurfingTime / 60;
             var surfSecs = mTotalSurfingTime % 60;
             var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
-            dc.drawText(44, 138, Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(leftX, (height * 0.784).toNumber(), Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
 
-            dc.drawText(132, 118, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(rightX, (height * 0.67).toNumber(), Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
 
             var clockTime = System.getClockTime();
             var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-            dc.drawText(132, 138, Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(rightX, (height * 0.784).toNumber(), Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 2) {
             // ----------------------------------------------------
@@ -543,19 +558,19 @@ class RiverSurfView extends WatchUi.View {
             dc.clear();
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-            dc.drawText(88, 64, Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, (height * 0.363).toNumber(), Graphics.FONT_XTINY, "DIAGNOSTICS", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var accelStr = mHasAccelData ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING";
-            dc.drawText(88, 84, Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, (height * 0.477).toNumber(), Graphics.FONT_XTINY, accelStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var varStr = "CARVE VARIANCE: " + mCurrentVariance.format("%.0f");
-            dc.drawText(88, 104, Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, (height * 0.59).toNumber(), Graphics.FONT_XTINY, varStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var speedKmhStr = "GPS SPEED: " + (mSpeed * 3.6).format("%.1f") + " km/h";
-            dc.drawText(88, 124, Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, (height * 0.704).toNumber(), Graphics.FONT_XTINY, speedKmhStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             var pageStr = "PAGE 3/3 (UP/DN SCROLL)";
-            dc.drawText(88, 142, Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(centerX, (height * 0.806).toNumber(), Graphics.FONT_XTINY, pageStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 }
