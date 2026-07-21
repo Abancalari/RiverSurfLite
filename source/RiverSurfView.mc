@@ -374,11 +374,17 @@ class RiverSurfView extends WatchUi.View {
             }
             mSession.save();
             mSession = null;
+
+            var summaryView = new RiverSurfSummaryView(mTotalWaves, mTotalSurfingTime, mLongestWaveDuration, mMaxWaveSpeed);
+            var summaryDelegate = new RiverSurfSummaryDelegate();
+
             mTotalWaves = 0;
             mTotalSurfingTime = 0;
             mMaxWaveSpeed = 0.0;
             mLongestWaveDuration = 0;
             mState = STATE_WAITING;
+
+            WatchUi.pushView(summaryView, summaryDelegate, WatchUi.SLIDE_IMMEDIATE);
         }
         WatchUi.requestUpdate();
     }
