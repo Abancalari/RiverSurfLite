@@ -389,14 +389,14 @@ class RiverSurfView extends WatchUi.View {
             if (mSession != null && mSession.isRecording()) {
                 stateLabel = "[REC]";
             }
-            dc.drawText(10, 18, Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText(10, 26, Graphics.FONT_TINY, stateLabel, Graphics.TEXT_JUSTIFY_LEFT);
 
             // ----------------------------------------------------
             // 2. Sub-Window Lens (Circle Lens in Top-Right)
             // ----------------------------------------------------
-            var subCenterX = 138;
-            dc.drawText(subCenterX, 16, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(subCenterX, 42, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            var subCenterX = 142;
+            dc.drawText(subCenterX, 20, Graphics.FONT_XTINY, "WAVES", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(subCenterX, 44, Graphics.FONT_MEDIUM, mTotalWaves.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             // ----------------------------------------------------
             // 3. Main Status Banner (Center)
@@ -409,30 +409,30 @@ class RiverSurfView extends WatchUi.View {
             }
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillRectangle(0, 68, 176, 36);
+            dc.fillRectangle(0, 76, 176, 34);
 
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(88, 86, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(88, 93, Graphics.FONT_MEDIUM, statusText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
             // ----------------------------------------------------
             // 4. Bottom Split Layout (Surf Time | Time of Day)
             // ----------------------------------------------------
-            dc.drawLine(88, 110, 88, 166);
+            dc.drawLine(88, 114, 88, 168);
 
-            dc.drawText(44, 114, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(44, 118, Graphics.FONT_XTINY, "SURF TIME", Graphics.TEXT_JUSTIFY_CENTER);
             
             var surfMins = mTotalSurfingTime / 60;
             var surfSecs = mTotalSurfingTime % 60;
             var surfTimeString = surfMins.format("%02d") + ":" + surfSecs.format("%02d");
-            dc.drawText(44, 134, Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(44, 138, Graphics.FONT_TINY, surfTimeString, Graphics.TEXT_JUSTIFY_CENTER);
 
-            dc.drawText(132, 114, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(132, 118, Graphics.FONT_XTINY, "TOD", Graphics.TEXT_JUSTIFY_CENTER);
 
             var clockTime = System.getClockTime();
             var todString = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-            dc.drawText(132, 134, Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(132, 138, Graphics.FONT_TINY, todString, Graphics.TEXT_JUSTIFY_CENTER);
 
         } else if (mCurrentPage == 1) {
             // PAGE 2: Sensor & Motion Diagnostics
