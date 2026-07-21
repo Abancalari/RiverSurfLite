@@ -212,17 +212,6 @@ class RiverSurfView extends WatchUi.View {
                 waveLabel.setText(mTotalWaves.toString());
             }
 
-            var statusText = View.findDrawableById("StatusText") as Text;
-            if (statusText != null) {
-                if (mState == STATE_SURFING) {
-                    statusText.setText("[ SURFING! ]");
-                } else if (mState == STATE_SWEPT) {
-                    statusText.setText("[ SWEPT ]");
-                } else {
-                    statusText.setText("[ WAITING ]");
-                }
-            }
-
             var surfTime = View.findDrawableById("SurfTime") as Text;
             if (surfTime != null) {
                 var surfMins = mTotalSurfingTime / 60;
@@ -237,6 +226,29 @@ class RiverSurfView extends WatchUi.View {
             }
 
             View.onUpdate(dc);
+
+            // Draw full-width horizontal white status banner in the center
+            var width = dc.getWidth();
+            var height = dc.getHeight();
+            var bannerY = (height * 0.432).toNumber(); // y = 76 on 176px Instinct 2
+            var bannerH = (height * 0.193).toNumber(); // height = 34px
+
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+            dc.fillRectangle(0, bannerY, width, bannerH);
+
+            var statusStr = "[ WAITING ]";
+            if (mState == STATE_SURFING) {
+                statusStr = "[ SURFING! ]";
+            } else if (mState == STATE_SWEPT) {
+                statusStr = "[ SWEPT ]";
+            }
+
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, bannerY + bannerH / 2, Graphics.FONT_MEDIUM, statusStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+            // Draw bottom split divider line between Surf Time and TOD
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(width / 2, (height * 0.647).toNumber(), width / 2, (height * 0.954).toNumber());
         }
     }
 
