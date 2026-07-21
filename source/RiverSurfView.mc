@@ -30,9 +30,9 @@ class RiverSurfView extends WatchUi.View {
 
     private var mState = STATE_WAITING;
 
-    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page, 2: Diagnostics Page)
+    // Page navigation index (0: GPS Lock Status, 1: Main Surf Page)
     private var mCurrentPage = 0;
-    private const TOTAL_PAGES = 3;
+    private const TOTAL_PAGES = 2;
     private var mGpsAccuracy = 0;
 
     // Wave statistics
@@ -139,8 +139,6 @@ class RiverSurfView extends WatchUi.View {
             setLayout(Rez.Layouts.GpsLayout(dc));
         } else if (mCurrentPage == 1) {
             setLayout(Rez.Layouts.MainLayout(dc));
-        } else if (mCurrentPage == 2) {
-            setLayout(Rez.Layouts.DiagLayout(dc));
         }
     }
 
@@ -532,10 +530,22 @@ class RiverSurfView extends WatchUi.View {
             var menu = new WatchUi.Menu();
             menu.setTitle("Session Menu");
             menu.addItem("Resume", :itemResume);
+            menu.addItem("Diagnostics", :itemDiag);
             menu.addItem("Save", :itemSave);
             menu.addItem("Discard", :itemDiscard);
 
             WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
         }
     }
+
+    function showDiagnosticsView() {
+        mMenuOpen = false;
+        var diagView = new RiverSurfDiagView(self);
+        var diagDelegate = new RiverSurfDiagDelegate();
+        WatchUi.pushView(diagView, diagDelegate, WatchUi.SLIDE_IMMEDIATE);
+    }
+
+    function hasAccelData() { return mHasAccelData; }
+    function getCarveVariance() { return mCurrentVariance; }
+    function getSpeed() { return mSpeed; }
 }

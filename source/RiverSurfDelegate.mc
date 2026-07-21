@@ -54,6 +54,8 @@ class RiverSurfMenuDelegate extends WatchUi.MenuInputDelegate {
         if (mView != null) {
             if (item == :itemResume) {
                 mView.resumeSession();
+            } else if (item == :itemDiag) {
+                mView.showDiagnosticsView();
             } else if (item == :itemSave) {
                 mView.saveSession();
             } else if (item == :itemDiscard) {
