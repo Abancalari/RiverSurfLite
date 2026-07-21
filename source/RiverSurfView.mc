@@ -299,7 +299,8 @@ class RiverSurfView extends WatchUi.View {
                     :mesgType => FitContributor.MESG_TYPE_SESSION,
                     :label => "Wave Count",
                     :units => "waves",
-                    :count => 1
+                    :count => 1,
+                    :nativeNum => 26
                 }
             );
             mTimeSurfingField = mSession.createField(
