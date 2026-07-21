@@ -1,8 +1,6 @@
 # Monkey C build artifacts
 bin/
 build/
-*.prg
-*.iq
 *.whl
 
 # IDE
