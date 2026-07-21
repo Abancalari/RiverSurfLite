@@ -208,6 +208,9 @@ class RiverSurfView extends WatchUi.View {
                             if (mCurrentWaveDuration > mLongestWaveDuration) {
                                 mLongestWaveDuration = mCurrentWaveDuration;
                             }
+                            if (mWaveRegistered && mSession != null && mSession.isRecording()) {
+                                mSession.addLap();
+                            }
                         }
                         break;
 
