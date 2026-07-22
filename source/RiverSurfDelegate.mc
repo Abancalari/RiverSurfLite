@@ -64,3 +64,26 @@ class RiverSurfMenuDelegate extends WatchUi.MenuInputDelegate {
         }
     }
 }
+
+class RiverSurfSettingsMenuDelegate extends WatchUi.MenuInputDelegate {
+    private var mView;
+
+    function initialize(view) {
+        MenuInputDelegate.initialize();
+        mView = view;
+    }
+
+    function onMenuItem(item) {
+        if (mView != null) {
+            if (item == :itemSetVar) {
+                mView.cycleAccelVarThreshold();
+            } else if (item == :itemSetMinSpd) {
+                mView.cycleMinSpeedThreshold();
+            } else if (item == :itemSetSweepSpd) {
+                mView.cycleSweepSpeedThreshold();
+            } else if (item == :itemResetDef) {
+                mView.resetThresholdDefaults();
+            }
+        }
+    }
+}

@@ -6,8 +6,8 @@ import Toybox.FitContributor;
 import Toybox.Sensor;
 import Toybox.Position;
 import Toybox.Math;
-import Toybox.Timer;
 import Toybox.System;
+import Toybox.Application.Storage;
 
 class RiverSurfView extends WatchUi.View {
 
@@ -21,14 +21,16 @@ class RiverSurfView extends WatchUi.View {
     // Recording Session
     private var mSession = null;
 
-    // Surfing states
+    // Surfing states (matching RiverSurfIQ / F66G0135.PRG)
     enum SurfState {
         STATE_WAITING = 0,
         STATE_SURFING = 1,
-        STATE_SWEPT = 2
+        STATE_SURFED = 2,
+        STATE_SWEPT = 3
     }
 
     private var mState = STATE_WAITING;
+    private var mSurfedDisplayTicks = 0;
 
     // Page navigation index (0: Main Surf Activity Page, 1: Wave History Page)
     private var mCurrentPage = 0;
@@ -53,9 +55,11 @@ class RiverSurfView extends WatchUi.View {
     private var mCurrentVariance = 0.0;
     private var mHasAccelData = false;
 
-    // Thresholds
-    private const SURF_ACCEL_VAR_THRESHOLD = 5000.0; // millig^2
-    private const SWEEP_SPEED_THRESHOLD = 2.5;     // 2.5 m/s = 9 km/h
+    // Configurable Thresholds (Saved in Toybox.Application.Storage)
+    private var mSurfAccelVarThreshold = 5000.0; // millig^2 (high-frequency motion)
+    private var mMinSurfSpeedThreshold = 1.5;     // 1.5 m/s = 5.4 km/h (minimum motion requirement)
+    private var mSurfExitSpeedThreshold = 1.2;    // 1.2 m/s = 4.3 km/h (drop threshold to exit wave)
+    private var mSweepSpeedThreshold = 2.5;        // 2.5 m/s = 9.0 km/h (swept downstream threshold)
 
     // Timer & Metrics
     private var mTimer;
@@ -66,6 +70,7 @@ class RiverSurfView extends WatchUi.View {
         View.initialize();
 
         mTimer = new Timer.Timer();
+        loadThresholdSettings();
 
         // Register high-frequency accelerometer listener
         try {
@@ -101,6 +106,8 @@ class RiverSurfView extends WatchUi.View {
         }
     }
 
+    private var mInDiagnostics = false;
+
     function onShow() {
         mTimer.start(method(:onTimerTick), 1000, true);
         try {
@@ -110,10 +117,12 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function onHide() {
-        mTimer.stop();
-        try {
-            Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition));
-        } catch (e) {
+        if (!mInDiagnostics) {
+            mTimer.stop();
+            try {
+                Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition));
+            } catch (e) {
+            }
         }
     }
 
@@ -209,10 +218,12 @@ class RiverSurfView extends WatchUi.View {
             } else {
                 if (mState == STATE_SURFING) {
                     statusStr = "[ SURFING! ]";
+                } else if (mState == STATE_SURFED) {
+                    statusStr = "[ SURFED ]";
                 } else if (mState == STATE_SWEPT) {
                     statusStr = "[ SWEPT ]";
                 } else {
-                    statusStr = "[ WAITING ]";
+                    statusStr = "[ ON SHORE ]";
                 }
             }
 
@@ -322,7 +333,8 @@ class RiverSurfView extends WatchUi.View {
             if (mSession != null && mSession.isRecording()) {
                 switch (mState) {
                     case STATE_WAITING:
-                        if (mCurrentVariance > SURF_ACCEL_VAR_THRESHOLD && mSpeed < SWEEP_SPEED_THRESHOLD) {
+                        // Require BOTH high-frequency board agitation AND minimum surf speed (>= 1.5 m/s)
+                        if (mCurrentVariance > mSurfAccelVarThreshold && mSpeed >= mMinSurfSpeedThreshold && mSpeed < mSweepSpeedThreshold) {
                             mState = STATE_SURFING;
                             mCurrentWaveDuration = 0;
                             mWaveRegistered = false;
@@ -337,7 +349,6 @@ class RiverSurfView extends WatchUi.View {
                         }
 
                         if (mCurrentWaveDuration >= 3 && !mWaveRegistered) {
-                            mTotalWaves += 1;
                             mWaveRegistered = true;
                         }
 
@@ -346,29 +357,41 @@ class RiverSurfView extends WatchUi.View {
                         }
 
                         var endWave = false;
-                        if (mSpeed >= SWEEP_SPEED_THRESHOLD) {
+                        if (mSpeed >= mSweepSpeedThreshold) {
                             mState = STATE_SWEPT;
                             endWave = true;
-                        } else if (mCurrentVariance <= SURF_ACCEL_VAR_THRESHOLD) {
-                            mState = STATE_WAITING;
+                        } else if (mSpeed < mSurfExitSpeedThreshold || mCurrentVariance <= mSurfAccelVarThreshold) {
+                            if (mWaveRegistered) {
+                                mState = STATE_SURFED;
+                                mSurfedDisplayTicks = 2; // Show [ SURFED ] banner for 2 seconds
+                            } else {
+                                mState = STATE_WAITING;
+                            }
                             endWave = true;
                         }
 
-                        if (endWave) {
+                        if (endWave && mWaveRegistered) {
+                            mTotalWaves += 1;
                             if (mCurrentWaveDuration > mLongestWaveDuration) {
                                 mLongestWaveDuration = mCurrentWaveDuration;
                             }
-                            if (mWaveRegistered) {
-                                mWaveHistory.add(mCurrentWaveDuration);
-                                if (mSession != null && mSession.isRecording()) {
-                                    mSession.addLap();
-                                }
+                            mWaveHistory.add(mCurrentWaveDuration);
+                            if (mSession != null && mSession.isRecording()) {
+                                mSession.addLap();
                             }
                         }
                         break;
 
+                    case STATE_SURFED:
+                        if (mSurfedDisplayTicks > 0) {
+                            mSurfedDisplayTicks -= 1;
+                        } else {
+                            mState = STATE_WAITING;
+                        }
+                        break;
+
                     case STATE_SWEPT:
-                        if (mSpeed < SWEEP_SPEED_THRESHOLD) {
+                        if (mSpeed < mMinSurfSpeedThreshold) {
                             mState = STATE_WAITING;
                         }
                         break;
@@ -399,7 +422,7 @@ class RiverSurfView extends WatchUi.View {
             mLongestWaveField.setData(mLongestWaveDuration);
         }
         if (mWaveDurationField != null) {
-            var dur = (mState == STATE_SURFING) ? mCurrentWaveDuration : 0;
+            var dur = (mState == STATE_SURFING || mState == STATE_SURFED) ? mCurrentWaveDuration : 0;
             mWaveDurationField.setData(dur);
         }
     }
@@ -581,12 +604,122 @@ class RiverSurfView extends WatchUi.View {
 
     function showDiagnosticsView() {
         mMenuOpen = false;
+        mInDiagnostics = true;
         var diagView = new RiverSurfDiagView(self);
-        var diagDelegate = new RiverSurfDiagDelegate();
+        var diagDelegate = new RiverSurfDiagDelegate(self);
         WatchUi.pushView(diagView, diagDelegate, WatchUi.SLIDE_IMMEDIATE);
+    }
+
+    function exitDiagnostics() {
+        mInDiagnostics = false;
+        mTimer.start(method(:onTimerTick), 1000, true);
+        try {
+            Position.enableLocationEvents(Position.LOCATION_CONTINUOUS, method(:onPosition));
+        } catch (e) {
+        }
     }
 
     function hasAccelData() { return mHasAccelData; }
     function getCarveVariance() { return mCurrentVariance; }
     function getSpeed() { return mSpeed; }
+    function getGpsAccuracy() { return mGpsAccuracy; }
+
+    // On-Watch Threshold Adjustment Menu & Storage Persistence
+    function showSettingsMenu() {
+        var menu = new WatchUi.Menu();
+        menu.setTitle("Threshold Settings");
+        menu.addItem("Var: " + mSurfAccelVarThreshold.format("%.0f"), :itemSetVar);
+        menu.addItem("MinSpd: " + mMinSurfSpeedThreshold.format("%.1f") + "m/s", :itemSetMinSpd);
+        menu.addItem("Sweep: " + mSweepSpeedThreshold.format("%.1f") + "m/s", :itemSetSweepSpd);
+        menu.addItem("Reset Defaults", :itemResetDef);
+
+        WatchUi.pushView(menu, new RiverSurfSettingsMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
+    }
+
+    function cycleAccelVarThreshold() {
+        var steps = [2000.0, 3000.0, 4000.0, 5000.0, 6000.0, 8000.0, 10000.0];
+        var idx = 0;
+        for (var i = 0; i < steps.size(); i++) {
+            if (mSurfAccelVarThreshold < steps[i]) {
+                idx = i;
+                break;
+            }
+        }
+        mSurfAccelVarThreshold = steps[idx];
+        saveThresholdSettings();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        showSettingsMenu();
+    }
+
+    function cycleMinSpeedThreshold() {
+        var steps = [0.8, 1.0, 1.2, 1.5, 1.8, 2.0];
+        var idx = 0;
+        for (var i = 0; i < steps.size(); i++) {
+            if (mMinSurfSpeedThreshold < steps[i]) {
+                idx = i;
+                break;
+            }
+        }
+        mMinSurfSpeedThreshold = steps[idx];
+        saveThresholdSettings();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        showSettingsMenu();
+    }
+
+    function cycleSweepSpeedThreshold() {
+        var steps = [2.0, 2.5, 3.0, 3.5, 4.0];
+        var idx = 0;
+        for (var i = 0; i < steps.size(); i++) {
+            if (mSweepSpeedThreshold < steps[i]) {
+                idx = i;
+                break;
+            }
+        }
+        mSweepSpeedThreshold = steps[idx];
+        saveThresholdSettings();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        showSettingsMenu();
+    }
+
+    function resetThresholdDefaults() {
+        mSurfAccelVarThreshold = 5000.0;
+        mMinSurfSpeedThreshold = 1.5;
+        mSurfExitSpeedThreshold = 1.2;
+        mSweepSpeedThreshold = 2.5;
+        saveThresholdSettings();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        showSettingsMenu();
+    }
+
+    function loadThresholdSettings() {
+        try {
+            var valVar = Storage.getValue("surfAccelVar");
+            if (valVar != null) {
+                mSurfAccelVarThreshold = valVar.toFloat();
+            }
+            var valMinSpd = Storage.getValue("minSurfSpeed");
+            if (valMinSpd != null) {
+                mMinSurfSpeedThreshold = valMinSpd.toFloat();
+            }
+            var valExitSpd = Storage.getValue("surfExitSpeed");
+            if (valExitSpd != null) {
+                mSurfExitSpeedThreshold = valExitSpd.toFloat();
+            }
+            var valSweepSpd = Storage.getValue("sweepSpeed");
+            if (valSweepSpd != null) {
+                mSweepSpeedThreshold = valSweepSpd.toFloat();
+            }
+        } catch (e) {
+        }
+    }
+
+    function saveThresholdSettings() {
+        try {
+            Storage.setValue("surfAccelVar", mSurfAccelVarThreshold);
+            Storage.setValue("minSurfSpeed", mMinSurfSpeedThreshold);
+            Storage.setValue("surfExitSpeed", mSurfExitSpeedThreshold);
+            Storage.setValue("sweepSpeed", mSweepSpeedThreshold);
+        } catch (e) {
+        }
+    }
 }
