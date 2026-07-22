@@ -87,6 +87,9 @@ class RiverSurfSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             } else if (id == :itemSetSweepSpd) {
                 var newVal = mView.cycleSweepSpeedThreshold();
                 item.setSubLabel(newVal.format("%.1f") + " m/s");
+            } else if (id == :itemSetGeofence) {
+                var newVal = mView.cycleGeofenceDistance();
+                item.setSubLabel(newVal.format("%.0f") + " m");
             } else if (id == :itemResetDef) {
                 mView.resetThresholdDefaults();
                 WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);

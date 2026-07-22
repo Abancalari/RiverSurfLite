@@ -6,10 +6,17 @@
         <string id="SurfTime">Surf Time</string>
         <string id="MaxSurfSpeed">Max Surf Speed</string>
         <string id="LongestWave">Longest Wave</string>
-        <string id="WaveDuration">Wave Duration</string>
+        <string id="SurfState">Surf State</string>
+        <string id="MinSurfSpeed">Min Surf Speed</string>
+        <string id="SweepSpeed">Sweep Speed</string>
+        <string id="GeofenceDist">Geofence Distance</string>
+        <string id="AccelVar">Accel Variance</string>
         <string id="WavesUnit">waves</string>
         <string id="SecUnit">s</string>
         <string id="MsUnit">m/s</string>
+        <string id="MetersUnit">m</string>
+        <string id="StateUnit">state</string>
+        <string id="Mg2Unit">mg²</string>
     </strings>
 
     <!-- 2. Launcher Icon Bitmap Element -->
@@ -48,13 +55,41 @@
                   displayInChart="false" 
                   displayInActivitySummary="true" />
         <fitField id="4" 
-                  dataLabel="@Strings.WaveDuration" 
-                  unitLabel="@Strings.SecUnit" 
+                  dataLabel="@Strings.SurfState" 
+                  unitLabel="@Strings.StateUnit" 
                   sortOrder="4" 
                   precision="0" 
-                  chartTitle="@Strings.WaveDuration" 
-                  fillColor="#FFFF00"
+                  chartTitle="@Strings.SurfState" 
+                  fillColor="#00FFFF"
                   displayInChart="true" 
                   displayInActivitySummary="false" />
+        <fitField id="5" 
+                  dataLabel="@Strings.MinSurfSpeed" 
+                  unitLabel="@Strings.MsUnit" 
+                  sortOrder="5" 
+                  precision="1" 
+                  displayInChart="false" 
+                  displayInActivitySummary="true" />
+        <fitField id="6" 
+                  dataLabel="@Strings.SweepSpeed" 
+                  unitLabel="@Strings.MsUnit" 
+                  sortOrder="6" 
+                  precision="1" 
+                  displayInChart="false" 
+                  displayInActivitySummary="true" />
+        <fitField id="7" 
+                  dataLabel="@Strings.GeofenceDist" 
+                  unitLabel="@Strings.MetersUnit" 
+                  sortOrder="7" 
+                  precision="1" 
+                  displayInChart="false" 
+                  displayInActivitySummary="true" />
+        <fitField id="8" 
+                  dataLabel="@Strings.AccelVar" 
+                  unitLabel="@Strings.Mg2Unit" 
+                  sortOrder="8" 
+                  precision="0" 
+                  displayInChart="false" 
+                  displayInActivitySummary="true" />
     </fitContributions>
 </resources>
