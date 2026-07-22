@@ -1,8 +1,9 @@
 <layouts>
     <layout id="DiagLayout">
         <label id="SubGpsStatus" x="50%" y="15%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
-        <label id="AccelStatus" x="center" y="42%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="ACCEL: WAITING" />
-        <label id="VarianceText" x="center" y="58%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="CARVE VARIANCE: 0" />
-        <label id="GpsSpeedText" x="center" y="74%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="GPS SPEED: 0.0 km/h" />
+        <label id="VarianceHeader" x="center" y="32%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="CARVE VARIANCE" />
+        <label id="VarianceValue" x="center" y="45%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <label id="GpsSpeedHeader" x="center" y="62%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="GPS SPEED" />
+        <label id="GpsSpeedValue" x="center" y="75%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.0 km/h" />
     </layout>
 </layouts>

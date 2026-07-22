@@ -43,19 +43,14 @@ class RiverSurfDiagView extends WatchUi.View {
                 subGpsStatus.setText(mParentView.getGpsAccuracy().toString());
             }
 
-            var accelStatus = View.findDrawableById("AccelStatus") as Text;
-            if (accelStatus != null) {
-                accelStatus.setText(mParentView.hasAccelData() ? "ACCEL: STREAMING (25Hz)" : "ACCEL: WAITING");
+            var varianceVal = View.findDrawableById("VarianceValue") as Text;
+            if (varianceVal != null) {
+                varianceVal.setText(mParentView.getCarveVariance().format("%.0f"));
             }
 
-            var varianceText = View.findDrawableById("VarianceText") as Text;
-            if (varianceText != null) {
-                varianceText.setText("CARVE VARIANCE: " + mParentView.getCarveVariance().format("%.0f"));
-            }
-
-            var gpsSpeedText = View.findDrawableById("GpsSpeedText") as Text;
-            if (gpsSpeedText != null) {
-                gpsSpeedText.setText("GPS SPEED: " + (mParentView.getSpeed() * 3.6).format("%.1f") + " km/h");
+            var speedVal = View.findDrawableById("GpsSpeedValue") as Text;
+            if (speedVal != null) {
+                speedVal.setText((mParentView.getSpeed() * 3.6).format("%.1f") + " km/h");
             }
         }
 

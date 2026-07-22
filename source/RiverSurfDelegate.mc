@@ -54,35 +54,43 @@ class RiverSurfMenuDelegate extends WatchUi.MenuInputDelegate {
         if (mView != null) {
             if (item == :itemResume) {
                 mView.resumeSession();
-            } else if (item == :itemDiag) {
-                mView.showDiagnosticsView();
             } else if (item == :itemSave) {
                 mView.saveSession();
             } else if (item == :itemDiscard) {
                 mView.discardSession();
+            } else if (item == :itemSettings) {
+                mView.showSettingsMenu();
+            } else if (item == :itemDiag) {
+                mView.showDiagnosticsView();
             }
         }
     }
 }
 
-class RiverSurfSettingsMenuDelegate extends WatchUi.MenuInputDelegate {
+class RiverSurfSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     private var mView;
 
     function initialize(view) {
-        MenuInputDelegate.initialize();
+        Menu2InputDelegate.initialize();
         mView = view;
     }
 
-    function onMenuItem(item) {
+    function onSelect(item as WatchUi.MenuItem) as Void {
         if (mView != null) {
-            if (item == :itemSetVar) {
-                mView.cycleAccelVarThreshold();
-            } else if (item == :itemSetMinSpd) {
-                mView.cycleMinSpeedThreshold();
-            } else if (item == :itemSetSweepSpd) {
-                mView.cycleSweepSpeedThreshold();
-            } else if (item == :itemResetDef) {
+            var id = item.getId();
+            if (id == :itemSetVar) {
+                var newVal = mView.cycleAccelVarThreshold();
+                item.setSubLabel(newVal.format("%.0f") + " mg²");
+            } else if (id == :itemSetMinSpd) {
+                var newVal = mView.cycleMinSpeedThreshold();
+                item.setSubLabel(newVal.format("%.1f") + " m/s");
+            } else if (id == :itemSetSweepSpd) {
+                var newVal = mView.cycleSweepSpeedThreshold();
+                item.setSubLabel(newVal.format("%.1f") + " m/s");
+            } else if (id == :itemResetDef) {
                 mView.resetThresholdDefaults();
+                WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+                mView.showSettingsMenu();
             }
         }
     }

@@ -466,7 +466,7 @@ class RiverSurfView extends WatchUi.View {
         if (mSession == null) {
             mSession = ActivityRecording.createSession({
                 :name => "River Surfing",
-                :sport => ActivityRecording.SPORT_SURFING,
+                :sport => ActivityRecording.SPORT_PADDLING,
                 :subSport => ActivityRecording.SUB_SPORT_GENERIC
             });
 
@@ -596,6 +596,7 @@ class RiverSurfView extends WatchUi.View {
             menu.addItem("Resume", :itemResume);
             menu.addItem("Save", :itemSave);
             menu.addItem("Discard", :itemDiscard);
+            menu.addItem("Settings", :itemSettings);
             menu.addItem("Diagnostics", :itemDiag);
 
             WatchUi.pushView(menu, new RiverSurfMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
@@ -626,12 +627,11 @@ class RiverSurfView extends WatchUi.View {
 
     // On-Watch Threshold Adjustment Menu & Storage Persistence
     function showSettingsMenu() {
-        var menu = new WatchUi.Menu();
-        menu.setTitle("Threshold Settings");
-        menu.addItem("Var: " + mSurfAccelVarThreshold.format("%.0f"), :itemSetVar);
-        menu.addItem("MinSpd: " + mMinSurfSpeedThreshold.format("%.1f") + "m/s", :itemSetMinSpd);
-        menu.addItem("Sweep: " + mSweepSpeedThreshold.format("%.1f") + "m/s", :itemSetSweepSpd);
-        menu.addItem("Reset Defaults", :itemResetDef);
+        var menu = new WatchUi.Menu2({:title => "Thresholds"});
+        menu.addItem(new WatchUi.MenuItem("Accel Variance", mSurfAccelVarThreshold.format("%.0f") + " mg²", :itemSetVar, {}));
+        menu.addItem(new WatchUi.MenuItem("Min Surf Speed", mMinSurfSpeedThreshold.format("%.1f") + " m/s", :itemSetMinSpd, {}));
+        menu.addItem(new WatchUi.MenuItem("Sweep Speed", mSweepSpeedThreshold.format("%.1f") + " m/s", :itemSetSweepSpd, {}));
+        menu.addItem(new WatchUi.MenuItem("Reset Defaults", "", :itemResetDef, {}));
 
         WatchUi.pushView(menu, new RiverSurfSettingsMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
     }
@@ -647,8 +647,7 @@ class RiverSurfView extends WatchUi.View {
         }
         mSurfAccelVarThreshold = steps[idx];
         saveThresholdSettings();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        showSettingsMenu();
+        return mSurfAccelVarThreshold;
     }
 
     function cycleMinSpeedThreshold() {
@@ -662,8 +661,7 @@ class RiverSurfView extends WatchUi.View {
         }
         mMinSurfSpeedThreshold = steps[idx];
         saveThresholdSettings();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        showSettingsMenu();
+        return mMinSurfSpeedThreshold;
     }
 
     function cycleSweepSpeedThreshold() {
@@ -677,8 +675,7 @@ class RiverSurfView extends WatchUi.View {
         }
         mSweepSpeedThreshold = steps[idx];
         saveThresholdSettings();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        showSettingsMenu();
+        return mSweepSpeedThreshold;
     }
 
     function resetThresholdDefaults() {
@@ -687,8 +684,6 @@ class RiverSurfView extends WatchUi.View {
         mSurfExitSpeedThreshold = 1.2;
         mSweepSpeedThreshold = 2.5;
         saveThresholdSettings();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        showSettingsMenu();
     }
 
     function loadThresholdSettings() {
