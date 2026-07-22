@@ -1,7 +1,7 @@
 <layouts>
     <layout id="LapsLayout">
-        <!-- Sub-Window Lens Cutout: True center on Instinct 2: x=144, y=32 with VCENTER -->
-        <label id="SubWaveCount" x="144" y="32" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Sub-Window Lens Cutout: Adjusted Y=25 for true visual vertical centering of FONT_NUMBER_MEDIUM -->
+        <label id="SubWaveCount" x="144" y="25" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Main Screen Area: Prominent title "WAVES:" at x=18, y=20 -->
         <label id="LapsHeader" x="18" y="20" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" text="WAVES:" />
         <label id="LapItem1" x="88" y="65" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="NO WAVES YET" />

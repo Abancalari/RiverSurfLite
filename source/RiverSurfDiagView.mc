@@ -50,7 +50,7 @@ class RiverSurfDiagView extends WatchUi.View {
 
             var speedVal = View.findDrawableById("GpsSpeedValue") as Text;
             if (speedVal != null) {
-                speedVal.setText((mParentView.getSpeed() * 3.6).format("%.1f") + " km/h");
+                speedVal.setText(mParentView.getSpeed().format("%.2f") + " m/s");
             }
         }
 

@@ -1,11 +1,11 @@
 <layouts>
     <layout id="DiagLayout">
-        <!-- Sub-Window Lens Cutout: True center on Instinct 2: x=144, y=32 with VCENTER -->
-        <label id="SubGpsStatus" x="144" y="32" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
+        <!-- Sub-Window Lens Cutout: Adjusted Y=25 for true visual vertical centering of FONT_NUMBER_MEDIUM -->
+        <label id="SubGpsStatus" x="144" y="25" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER" color="Graphics.COLOR_WHITE" text="0" />
         <!-- Main Screen Area: 4-Row Condensed Diagnostics -->
         <label id="VarianceHeader" x="88" y="56" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="CARVE VARIANCE" />
         <label id="VarianceValue" x="88" y="76" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <label id="GpsSpeedHeader" x="88" y="106" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="GPS SPEED" />
-        <label id="GpsSpeedValue" x="88" y="126" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.0 km/h" />
+        <label id="GpsSpeedValue" x="88" y="126" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.00 m/s" />
     </layout>
 </layouts>

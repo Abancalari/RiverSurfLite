@@ -4,6 +4,6 @@
         <label id="VarianceHeader" x="center" y="32%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="CARVE VARIANCE" />
         <label id="VarianceValue" x="center" y="45%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0" />
         <label id="GpsSpeedHeader" x="center" y="62%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="GPS SPEED" />
-        <label id="GpsSpeedValue" x="center" y="75%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.0 km/h" />
+        <label id="GpsSpeedValue" x="center" y="75%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="0.00 m/s" />
     </layout>
 </layouts>

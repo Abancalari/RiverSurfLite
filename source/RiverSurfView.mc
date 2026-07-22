@@ -433,7 +433,6 @@ class RiverSurfView extends WatchUi.View {
     function onStartStopPressed() {
         if (mSession == null) {
             startSession();
-            mCurrentPage = 1;
         } else if (mSession.isRecording()) {
             mSession.stop();
             showPauseMenu();

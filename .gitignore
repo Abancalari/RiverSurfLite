@@ -1,6 +1,13 @@
-# Monkey C build artifacts
+# Monkey C build artifacts & intermediate files
 bin/
 build/
+gen/
+internal-mir/
+external-mir/
+*.debug.xml
+*-fit_contributions.json
+build.log
+developer_key.pem
 *.whl
 
 # IDE
