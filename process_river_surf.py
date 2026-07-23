@@ -20,13 +20,19 @@ from garmin_fit_sdk import Decoder, Encoder, Stream, Profile
 # App ID and Developer Field Definitions matching RiverSurfLite (Connect IQ)
 RIVERSURF_APP_ID = [93, 70, 120, 109, 152, 64, 71, 15, 176, 210, 173, 27, 225, 210, 76, 153]
 
+# Developer field definitions matching Connect IQ createField IDs exactly:
+# Field 0: wave_count (Session)
+# Field 1: time_surfing (Session)
+# Field 2: max_wave_speed (Session)
+# Field 3: longest_wave_time (Session)
+# Field 4: surf_state (Record)
 DEV_FIELD_DEFS = [
     {
         'field_name': 'surf_state',
         'units': 'state',
         'native_mesg_num': 20, # Record
         'developer_data_index': 0,
-        'field_definition_number': 0,
+        'field_definition_number': 4,
         'fit_base_type_id': 0, # uint8
         'key': 0
     },
@@ -35,7 +41,7 @@ DEV_FIELD_DEFS = [
         'units': 'waves',
         'native_mesg_num': 18, # Session
         'developer_data_index': 0,
-        'field_definition_number': 1,
+        'field_definition_number': 0,
         'fit_base_type_id': 132, # uint16
         'native_field_num': 26,
         'key': 1
@@ -45,7 +51,7 @@ DEV_FIELD_DEFS = [
         'units': 's',
         'native_mesg_num': 18, # Session
         'developer_data_index': 0,
-        'field_definition_number': 2,
+        'field_definition_number': 1,
         'fit_base_type_id': 134, # uint32
         'key': 2
     },
@@ -54,7 +60,7 @@ DEV_FIELD_DEFS = [
         'units': 'm/s',
         'native_mesg_num': 18, # Session
         'developer_data_index': 0,
-        'field_definition_number': 3,
+        'field_definition_number': 2,
         'fit_base_type_id': 136, # float32
         'key': 3
     },
@@ -63,7 +69,7 @@ DEV_FIELD_DEFS = [
         'units': 's',
         'native_mesg_num': 18, # Session
         'developer_data_index': 0,
-        'field_definition_number': 4,
+        'field_definition_number': 3,
         'fit_base_type_id': 132, # uint16
         'key': 4
     }
@@ -281,6 +287,7 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
         dev_fields = rec_copy.get('developer_fields', {})
         if not isinstance(dev_fields, dict):
             dev_fields = {}
+        # Key 0 corresponds to surf_state (field_definition_number 4)
         dev_fields[0] = dev_state_val
         rec_copy['developer_fields'] = dev_fields
         processed_records.append(rec_copy)
@@ -324,8 +331,20 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
     # Re-encode FIT File
     encoder = Encoder()
 
-    for df in DEV_FIELD_DEFS:
-        encoder.add_developer_field(df['key'], DEV_DATA_ID_MESG, df)
+    # Register developer field definitions matching exact original keys
+    # Key 0: Record surf_state (field_def 4)
+    # Key 1: Session wave_count (field_def 0)
+    # Key 2: Session time_surfing (field_def 1)
+    # Key 3: Session max_wave_speed (field_def 2)
+    # Key 4: Session longest_wave_time (field_def 3)
+    field_descs_to_use = messages.get('field_description_mesgs', [])
+    if not field_descs_to_use:
+        field_descs_to_use = DEV_FIELD_DEFS
+
+    for df in field_descs_to_use:
+        key = df.get('key')
+        if key is not None:
+            encoder.add_developer_field(key, DEV_DATA_ID_MESG, df)
 
     new_lap_mesgs = []
     for w in detected_waves:
@@ -369,7 +388,7 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
             encoder.write_mesg(DEV_DATA_ID_MESG)
 
         elif key == 'field_description_mesgs':
-            for df in DEV_FIELD_DEFS:
+            for df in field_descs_to_use:
                 df_copy = clean_message_dict(df)
                 df_copy['mesg_num'] = 206
                 encoder.write_mesg(df_copy)
@@ -417,6 +436,10 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
                 dev_fields = sess_clean.get('developer_fields', {})
                 if not isinstance(dev_fields, dict):
                     dev_fields = {}
+                # Key 1: wave_count (field_def 0)
+                # Key 2: time_surfing (field_def 1)
+                # Key 3: max_wave_speed (field_def 2)
+                # Key 4: longest_wave_time (field_def 3)
                 dev_fields[1] = total_waves
                 dev_fields[2] = total_surfing_time
                 dev_fields[3] = float(max_wave_speed)
@@ -556,11 +579,17 @@ def merge_fit_files(file_paths, output_path, sport_type="surfing"):
     merged_activity['num_sessions'] = 1
 
     encoder = Encoder()
-    for df in DEV_FIELD_DEFS:
-        encoder.add_developer_field(df['key'], DEV_DATA_ID_MESG, df)
+    field_descs_to_use = first_msgs.get('field_description_mesgs', [])
+    if not field_descs_to_use:
+        field_descs_to_use = DEV_FIELD_DEFS
+
+    for df in field_descs_to_use:
+        key = df.get('key')
+        if key is not None:
+            encoder.add_developer_field(key, DEV_DATA_ID_MESG, df)
 
     encoder.write_mesg(DEV_DATA_ID_MESG)
-    for df in DEV_FIELD_DEFS:
+    for df in field_descs_to_use:
         df_c = clean_message_dict(df)
         df_c['mesg_num'] = 206
         encoder.write_mesg(df_c)
@@ -571,7 +600,6 @@ def merge_fit_files(file_paths, output_path, sport_type="surfing"):
             m_c['mesg_num'] = NAME_TO_MESG_NUM[key]
             encoder.write_mesg(m_c)
 
-    # Sport mesg
     sport_m = clean_message_dict(first_msgs.get('sport_mesgs', [{}])[0])
     sport_m['mesg_num'] = 12
     sport_m['sport'] = sport_type
