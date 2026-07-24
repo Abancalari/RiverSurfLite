@@ -140,6 +140,8 @@ def semicircles_to_degrees(sc):
         return None
     return sc * (180.0 / (2**31))
 
+VALID_DEV_KEYS = {df['key'] for df in DEV_FIELD_DEFS}
+
 def clean_message_dict(msg):
     cleaned = {}
     for k, v in msg.items():
@@ -147,12 +149,15 @@ def clean_message_dict(msg):
             continue
         if isinstance(v, float) and math.isnan(v):
             continue
-        cleaned[k] = v
+        if k == 'developer_fields' and isinstance(v, dict):
+            cleaned[k] = {dk: dv for dk, dv in v.items() if dk in VALID_DEV_KEYS and dv is not None}
+        else:
+            cleaned[k] = v
     return cleaned
 
 def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_speed=0.6,
-                     sweep_speed=2.0, sweep_geofence_dist=15.0, min_wave_duration=5,
-                     swept_cooldown=30, sport_type="surfing", export_csv=False):
+                     sweep_speed=2.0, sweep_geofence_dist=20.0, min_wave_duration=5,
+                     swept_cooldown=60, sport_type="surfing", export_csv=False):
     
     print(f"\n{'='*70}")
     print(f" PROCESSING FIT FILE: {os.path.basename(filepath)}")
@@ -203,102 +208,147 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
 
     detected_waves = []
     processed_records = []
-    
+    recs_count = len(record_mesgs)
+    # Calculate Session Wave Anchor (average of low-speed on-land/eddy points)
+    waiting_lats = []
+    waiting_lons = []
+    for r in record_mesgs:
+        spd = r.get('enhanced_speed') if r.get('enhanced_speed') is not None else (r.get('speed', 0.0) or 0.0)
+        lat = semicircles_to_degrees(r.get('position_lat'))
+        lon = semicircles_to_degrees(r.get('position_long'))
+        if lat and lon and spd < 0.8:
+            waiting_lats.append(lat)
+            waiting_lons.append(lon)
+
+    anchor_lat = sum(waiting_lats) / len(waiting_lats) if waiting_lats else None
+    anchor_lon = sum(waiting_lons) / len(waiting_lons) if waiting_lons else None
+    is_high_speed = [(r.get('enhanced_speed') if r.get('enhanced_speed') is not None else (r.get('speed', 0.0) or 0.0)) >= 1.0 for r in record_mesgs]
+    is_surfing = [False] * recs_count
+    is_swept = [False] * recs_count
+    last_swept_exit_time = None
+
+    for i in range(recs_count):
+        curr_time = record_mesgs[i].get('timestamp')
+        spd = record_mesgs[i].get('enhanced_speed') if record_mesgs[i].get('enhanced_speed') is not None else (record_mesgs[i].get('speed', 0.0) or 0.0)
+
+        # Swept Cooldown: Must be at least swept_cooldown seconds after last swept exit before transitioning back into surf
+        in_cooldown = False
+        if last_swept_exit_time is not None and curr_time is not None:
+            delta = (curr_time - last_swept_exit_time).total_seconds()
+            if delta < swept_cooldown:
+                in_cooldown = True
+
+        if spd >= min_surf_speed and not is_surfing[i] and not in_cooldown:
+            # Verify this speed spike burst eventually carries surfer outside the geofence
+            leaves_zone = False
+            for k in range(i, min(i + 90, recs_count)):
+                plat = semicircles_to_degrees(record_mesgs[k].get('position_lat'))
+                plon = semicircles_to_degrees(record_mesgs[k].get('position_long'))
+                if plat and plon:
+                    dist = calculate_distance(anchor_lat, anchor_lon, plat, plon) if (anchor_lat and plat) else 0.0
+                    if dist > sweep_geofence_dist:
+                        leaves_zone = True
+                        break
+
+            if leaves_zone:
+                # Wave starts at speed spike (i) and ends when exiting the geofence (dist > sweep_geofence_dist)
+                j = i
+                while j < recs_count:
+                    plat = semicircles_to_degrees(record_mesgs[j].get('position_lat'))
+                    plon = semicircles_to_degrees(record_mesgs[j].get('position_long'))
+                    dist = calculate_distance(anchor_lat, anchor_lon, plat, plon) if (plat and plon) else None
+                    if dist is None or dist <= sweep_geofence_dist:
+                        is_surfing[j] = True
+                    else:
+                        last_swept_exit_time = record_mesgs[j].get('timestamp')
+                        break # Exited geofence zone!
+                    j += 1
+
+    # Bridge small gaps (< 5s) inside the 15m zone to form contiguous waves
+    for i in range(1, recs_count - 1):
+        if not is_surfing[i] and is_surfing[i-1]:
+            for k in range(i + 1, min(i + 6, recs_count)):
+                if is_surfing[k]:
+                    for gap in range(i, k):
+                        is_surfing[gap] = True
+                    break
+
+    in_wave = False
+    curr_wave_dur = 0
+    wave_start_idx = 0
     wave_speeds = []
 
-    for i, rec in enumerate(record_mesgs):
-        speed = rec.get('enhanced_speed')
-        if speed is None:
-            speed = rec.get('speed', 0.0)
-        if speed is None:
-            speed = 0.0
+    # Determine Swept state (starts when exiting radius, ends when re-entering radius)
+    in_swept_state = False
+    for i in range(recs_count):
+        plat = semicircles_to_degrees(record_mesgs[i].get('position_lat'))
+        plon = semicircles_to_degrees(record_mesgs[i].get('position_long'))
+        dist = calculate_distance(anchor_lat, anchor_lon, plat, plon) if (plat and plon) else None
 
+        if dist is not None:
+            if dist > sweep_geofence_dist:
+                in_swept_state = True
+            elif dist <= sweep_geofence_dist:
+                in_swept_state = False
+
+        if not is_surfing[i] and in_swept_state:
+            is_swept[i] = True
+
+    for i, rec in enumerate(record_mesgs):
+        speed = rec.get('enhanced_speed') if rec.get('enhanced_speed') is not None else (rec.get('speed', 0.0) or 0.0)
         raw_lat = rec.get('position_lat')
         raw_lon = rec.get('position_long')
         lat_deg = semicircles_to_degrees(raw_lat)
         lon_deg = semicircles_to_degrees(raw_lon)
         timestamp = rec.get('timestamp')
 
-        if state == STATE_WAITING:
-            if swept_cooldown_ticks > 0:
-                swept_cooldown_ticks -= 1
-            
-            if swept_cooldown_ticks <= 0 and speed >= min_surf_speed:
-                state = STATE_SURFING
-                current_wave_duration = 0
-                current_wave_max_speed = speed
-                wave_registered = False
-                anchor_lat = lat_deg
-                anchor_lon = lon_deg
-                anchor_time = timestamp
-                wave_start_rec = rec
+        if is_surfing[i]:
+            state = STATE_SURFING
+        elif is_swept[i]:
+            state = STATE_SWEPT
+        else:
+            state = STATE_WAITING
+
+        if state == STATE_SURFING:
+            if not in_wave:
+                in_wave = True
+                curr_wave_dur = 0
+                wave_start_idx = i
                 wave_speeds = [speed]
-
-        elif state == STATE_SURFING:
-            current_wave_duration += 1
-            wave_speeds.append(speed)
-            if speed > current_wave_max_speed:
-                current_wave_max_speed = speed
-
-            if current_wave_duration >= min_wave_duration and not wave_registered:
-                wave_registered = True
-
-            if wave_registered:
-                total_surfing_time += 1
-
-            dist_from_anchor = calculate_distance(anchor_lat, anchor_lon, lat_deg, lon_deg)
-
-            end_wave = False
-            if dist_from_anchor >= sweep_geofence_dist or speed >= sweep_speed:
-                state = STATE_SWEPT
-                swept_cooldown_ticks = swept_cooldown
-                end_wave = True
-            elif speed < surf_exit_speed:
-                if wave_registered:
-                    state = STATE_SURFED
-                    surfed_display_ticks = 2
-                else:
-                    state = STATE_WAITING
-                end_wave = True
-
-            if end_wave and wave_registered:
-                total_waves += 1
-                if current_wave_duration > longest_wave_duration:
-                    longest_wave_duration = current_wave_duration
-                if current_wave_max_speed > max_wave_speed:
-                    max_wave_speed = current_wave_max_speed
-
-                avg_wave_speed = sum(wave_speeds) / len(wave_speeds) if wave_speeds else 0.0
-
-                wave_info = {
-                    'wave_num': total_waves,
-                    'start_time': anchor_time,
-                    'end_time': timestamp,
-                    'duration': current_wave_duration,
-                    'max_speed': current_wave_max_speed,
-                    'avg_speed': avg_wave_speed,
-                    'distance': dist_from_anchor,
-                    'start_lat': wave_start_rec.get('position_lat'),
-                    'start_lon': wave_start_rec.get('position_long'),
-                    'end_lat': raw_lat,
-                    'end_lon': raw_lon,
-                }
-                detected_waves.append(wave_info)
-
-        elif state == STATE_SURFED:
-            if surfed_display_ticks > 0:
-                surfed_display_ticks -= 1
             else:
-                state = STATE_WAITING
+                curr_wave_dur += 1
+                wave_speeds.append(speed)
+        else:
+            if in_wave:
+                if curr_wave_dur >= 5:
+                    total_waves += 1
+                    total_surfing_time += curr_wave_dur
+                    start_r = record_mesgs[wave_start_idx]
+                    end_r = record_mesgs[i - 1]
+                    max_sp = max(wave_speeds) if wave_speeds else 0.0
+                    avg_sp = sum(wave_speeds) / len(wave_speeds) if wave_speeds else 0.0
+                    if curr_wave_dur > longest_wave_duration: longest_wave_duration = curr_wave_dur
+                    if max_sp > max_wave_speed: max_wave_speed = max_sp
 
-        elif state == STATE_SWEPT:
-            if swept_cooldown_ticks > 0:
-                swept_cooldown_ticks -= 1
-            elif speed < min_surf_speed:
-                state = STATE_WAITING
+                    detected_waves.append({
+                        'wave_num': total_waves,
+                        'start_time': start_r.get('timestamp'),
+                        'end_time': end_r.get('timestamp'),
+                        'duration': curr_wave_dur,
+                        'max_speed': max_sp,
+                        'avg_speed': avg_sp,
+                        'distance': 0.0,
+                        'start_lat': start_r.get('position_lat'),
+                        'start_lon': start_r.get('position_long'),
+                        'end_lat': raw_lat,
+                        'end_lon': raw_lon,
+                    })
+                in_wave = False
+                curr_wave_dur = 0
+                wave_speeds = []
 
         dev_state_val = 0
-        if state in (STATE_SURFING, STATE_SURFED):
+        if state == STATE_SURFING:
             dev_state_val = 1
         elif state == STATE_SWEPT:
             dev_state_val = 2
@@ -308,11 +358,8 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
         if not isinstance(dev_fields, dict):
             dev_fields = {}
 
-        # Key 0: Surf State (0=Waiting, 1=Surfing, 2=Swept)
         dev_fields[0] = dev_state_val
-        # Key 5: Surfing Active (1 when surfing, 0 when waiting/swept)
         dev_fields[5] = 1 if dev_state_val == 1 else 0
-        # Key 6: Swept Cooldown (1 when swept, 0 when waiting/surfing)
         dev_fields[6] = 1 if dev_state_val == 2 else 0
 
         rec_copy['developer_fields'] = dev_fields
@@ -361,6 +408,7 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
         encoder.add_developer_field(df['key'], DEV_DATA_ID_MESG, df)
 
     new_lap_mesgs = []
+    new_split_mesgs = []
     for w in detected_waves:
         lap_msg = {
             'mesg_num': 19,
@@ -384,6 +432,35 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
             'message_index': w['wave_num'] - 1
         }
         new_lap_mesgs.append(lap_msg)
+
+        split_msg = {
+            'mesg_num': 313,
+            'message_index': w['wave_num'] - 1,
+            'split_type': 'surf_active',
+            'start_time': w['start_time'],
+            'end_time': w['end_time'],
+            'total_timer_time': float(w['duration']),
+            'total_elapsed_time': float(w['duration']),
+            'max_speed': float(w['max_speed']),
+            'avg_speed': float(w['avg_speed']),
+            'total_distance': float(w['distance']),
+            'start_position_lat': w['start_lat'],
+            'start_position_long': w['start_lon'],
+            'end_position_lat': w['end_lat'],
+            'end_position_long': w['end_lon'],
+        }
+        new_split_mesgs.append(split_msg)
+
+    new_split_summary_mesg = {
+        'mesg_num': 312,
+        'message_index': 0,
+        'split_type': 'surf_active',
+        'num_splits': len(detected_waves),
+        'total_timer_time': float(total_surfing_time),
+        'max_speed': float(max_wave_speed),
+        'avg_speed': float(sum(w['avg_speed'] for w in detected_waves) / len(detected_waves)) if detected_waves else 0.0,
+        'total_distance': float(sum(w['distance'] for w in detected_waves))
+    }
 
     for key, mesg_list in messages.items():
         mesg_num = None
@@ -426,13 +503,38 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
             if new_lap_mesgs:
                 for lap in new_lap_mesgs:
                     lap_clean = clean_message_dict(lap)
+                    lap_clean['developer_fields'] = {}
                     encoder.write_mesg(lap_clean)
             else:
                 for lap in mesg_list:
                     lap_clean = clean_message_dict(lap)
                     lap_clean['mesg_num'] = 19
                     lap_clean['sport'] = sport_type
+                    lap_clean['developer_fields'] = {}
                     encoder.write_mesg(lap_clean)
+
+        elif key == 'split_summary_mesgs':
+            if new_split_summary_mesg:
+                sm_clean = clean_message_dict(new_split_summary_mesg)
+                sm_clean['mesg_num'] = 312
+                encoder.write_mesg(sm_clean)
+            else:
+                for sm in mesg_list:
+                    sm_clean = clean_message_dict(sm)
+                    sm_clean['mesg_num'] = 312
+                    encoder.write_mesg(sm_clean)
+
+        elif key == 'split_mesgs':
+            if new_split_mesgs:
+                for sm in new_split_mesgs:
+                    sm_clean = clean_message_dict(sm)
+                    sm_clean['mesg_num'] = 313
+                    encoder.write_mesg(sm_clean)
+            else:
+                for sm in mesg_list:
+                    sm_clean = clean_message_dict(sm)
+                    sm_clean['mesg_num'] = 313
+                    encoder.write_mesg(sm_clean)
 
         elif key == 'session_mesgs':
             for sess in mesg_list:
@@ -447,16 +549,26 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
                     sess_clean['enhanced_max_speed'] = max(sess_clean.get('enhanced_max_speed', 0.0), max_wave_speed)
                     sess_clean['max_speed'] = max(sess_clean.get('max_speed', 0.0), max_wave_speed)
 
-                dev_fields = sess_clean.get('developer_fields', {})
-                if not isinstance(dev_fields, dict):
-                    dev_fields = {}
-                dev_fields[1] = total_waves
-                dev_fields[2] = total_surfing_time
-                dev_fields[3] = float(max_wave_speed)
-                dev_fields[4] = longest_wave_duration
-                sess_clean['developer_fields'] = dev_fields
+                sess_clean['developer_fields'] = {
+                    1: total_waves,
+                    2: total_surfing_time,
+                    3: float(max_wave_speed),
+                    4: longest_wave_duration
+                }
 
                 encoder.write_mesg(sess_clean)
+
+    # Write Native Garmin Surf Wave Split Messages (Native Wave Traces for Garmin Connect)
+    if new_split_summary_mesg:
+        sm_clean = clean_message_dict(new_split_summary_mesg)
+        sm_clean['mesg_num'] = 312
+        encoder.write_mesg(sm_clean)
+
+    if new_split_mesgs:
+        for sm in new_split_mesgs:
+            sm_clean = clean_message_dict(sm)
+            sm_clean['mesg_num'] = 313
+            encoder.write_mesg(sm_clean)
 
         else:
             for m in mesg_list:
@@ -652,9 +764,9 @@ def main():
     parser.add_argument("--min-surf-speed", type=float, default=0.8, help="Minimum speed to trigger surf state in m/s (default: 0.8 = ~2.9 km/h)")
     parser.add_argument("--surf-exit-speed", type=float, default=0.6, help="Drop speed to exit wave in m/s (default: 0.6 = ~2.2 km/h)")
     parser.add_argument("--sweep-speed", type=float, default=2.0, help="Downstream sweep speed threshold in m/s (default: 2.0 = ~7.2 km/h)")
-    parser.add_argument("--sweep-geofence", type=float, default=15.0, help="Geofence displacement threshold in meters (default: 15.0)")
+    parser.add_argument("--sweep-geofence", type=float, default=20.0, help="Geofence displacement threshold in meters (default: 20.0)")
     parser.add_argument("--min-wave-duration", type=int, default=5, help="Minimum wave duration in seconds (default: 5)")
-    parser.add_argument("--swept-cooldown", type=int, default=30, help="Swept cooldown duration in seconds (default: 30)")
+    parser.add_argument("--swept-cooldown", type=int, default=60, help="Swept cooldown duration in seconds (default: 60)")
     parser.add_argument("--export-csv", action="store_true", help="Export wave breakdown to CSV")
 
     args = parser.parse_args()

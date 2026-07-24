@@ -64,13 +64,17 @@ class RiverSurfView extends WatchUi.View {
     // GPS Anchor & Position Tracking
     private var mAnchorLocation = null;
     private var mCurrentPosition = null;
+    private var mOnLandCount = 0;
+    private var mOnLandAvgLat = 0.0d;
+    private var mOnLandAvgLon = 0.0d;
 
     // Configurable Thresholds (Saved in Toybox.Application.Storage)
     private var mSurfAccelVarThreshold = 5000.0; // millig^2 (high-frequency motion)
     private var mMinSurfSpeedThreshold = 0.8;     // 0.8 m/s = 2.9 km/h (minimum motion requirement)
     private var mSurfExitSpeedThreshold = 0.6;    // 0.6 m/s = 2.2 km/h (drop threshold to exit wave)
-    private var mSweepSpeedThreshold = 2.0;        // 2.0 m/s = 7.2 km/h (swept downstream threshold)
-    private var mSweepGeofenceDist = 15.0;         // 15.0 meters spatial displacement threshold
+    private var mSweepSpeedThreshold = 2.0;        // 2.0 m/s = 7.2 km/h (swept downstream river flush threshold)
+    private var mSweepGeofenceDist = 25.0;         // 25.0 meters anchor radius threshold (gold-standard matching post-processor)
+    private var mSweptCooldownDuration = 60;       // 60 seconds locked cooldown after swept transition
 
     // Timer & Metrics
     private var mTimer;
@@ -345,6 +349,28 @@ class RiverSurfView extends WatchUi.View {
 
             // Only update wave state when active recording session is running
             if (mSession != null && mSession.isRecording()) {
+                // Continuously update running Session Wave Spot Anchor when waiting in eddy
+                if (mState == STATE_WAITING && mSpeed < mMinSurfSpeedThreshold && mCurrentPosition != null) {
+                    var curRad = mCurrentPosition.toRadians();
+                    if (curRad != null && curRad.size() >= 2) {
+                        var curLat = curRad[0].toDouble();
+                        var curLon = curRad[1].toDouble();
+                        mOnLandCount += 1;
+                        if (mOnLandCount == 1) {
+                            mOnLandAvgLat = curLat;
+                            mOnLandAvgLon = curLon;
+                        } else {
+                            mOnLandAvgLat += (curLat - mOnLandAvgLat) / mOnLandCount;
+                            mOnLandAvgLon += (curLon - mOnLandAvgLon) / mOnLandCount;
+                        }
+                    }
+                }
+
+                var distToAnchor = 0.0;
+                if (mOnLandCount > 0 && mCurrentPosition != null) {
+                    distToAnchor = calculateDistanceFromAnchor(mOnLandAvgLat, mOnLandAvgLon, mCurrentPosition);
+                }
+
                 var previousState = mState;
                 switch (mState) {
                     case STATE_WAITING:
@@ -352,12 +378,11 @@ class RiverSurfView extends WatchUi.View {
                             mSweptCooldownTicks -= 1;
                         }
 
-                        // Require BOTH high-frequency board agitation AND minimum surf speed (>= 0.8 m/s) when cooldown expired
-                        if (mSweptCooldownTicks <= 0 && mCurrentVariance > mSurfAccelVarThreshold && mSpeed >= mMinSurfSpeedThreshold) {
+                        // Must have board agitation AND be within 15m radius of Session Wave Anchor to transition to SURFING
+                        if (mSweptCooldownTicks <= 0 && mCurrentVariance > mSurfAccelVarThreshold && distToAnchor <= mSweepGeofenceDist) {
                             mState = STATE_SURFING;
                             mCurrentWaveDuration = 0;
                             mWaveRegistered = false;
-                            mAnchorLocation = mCurrentPosition;
                         }
                         break;
 
@@ -376,14 +401,13 @@ class RiverSurfView extends WatchUi.View {
                             mTotalSurfingTime += 1;
                         }
 
-                        var distFromAnchor = calculateDistance(mAnchorLocation, mCurrentPosition);
-
                         var endWave = false;
-                        if (distFromAnchor >= mSweepGeofenceDist || mSpeed >= mSweepSpeedThreshold) {
+                        // Swept transition triggers when moving outside the 15m anchor radius OR ground speed >= 1.0 m/s river flush speed
+                        if (distToAnchor > mSweepGeofenceDist || mSpeed >= mSweepSpeedThreshold) {
                             mState = STATE_SWEPT;
-                            mSweptCooldownTicks = 30; // Lock into SWEPT state for 30s cooldown
+                            mSweptCooldownTicks = mSweptCooldownDuration; // Lock into SWEPT state for cooldown duration
                             endWave = true;
-                        } else if (mSpeed < mSurfExitSpeedThreshold || mCurrentVariance <= mSurfAccelVarThreshold) {
+                        } else if (mCurrentVariance <= mSurfAccelVarThreshold) {
                             if (mWaveRegistered) {
                                 mState = STATE_SURFED;
                                 mSurfedDisplayTicks = 2; // Show [ SURFED ] banner for 2 seconds
@@ -743,6 +767,32 @@ class RiverSurfView extends WatchUi.View {
         return 0.0;
     }
 
+    private function calculateDistanceFromAnchor(anchorLatRad, anchorLonRad, curLoc) {
+        if (anchorLatRad == 0.0d || anchorLonRad == 0.0d || curLoc == null) {
+            return 0.0;
+        }
+        try {
+            var rads = curLoc.toRadians();
+            if (rads != null && rads.size() >= 2) {
+                var lat1 = anchorLatRad;
+                var lon1 = anchorLonRad;
+                var lat2 = rads[0].toDouble();
+                var lon2 = rads[1].toDouble();
+
+                var dlat = lat2 - lat1;
+                var dlon = lon2 - lon1;
+
+                var a = Math.sin(dlat / 2.0) * Math.sin(dlat / 2.0) +
+                        Math.cos(lat1) * Math.cos(lat2) *
+                        Math.sin(dlon / 2.0) * Math.sin(dlon / 2.0);
+                var c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+                return 6371000.0 * c;
+            }
+        } catch (e) {
+        }
+        return 0.0;
+    }
+
     // On-Watch Threshold Adjustment Menu & Storage Persistence
     function showSettingsMenu() {
         var menu = new WatchUi.Menu2({:title => "Thresholds"});
@@ -750,6 +800,7 @@ class RiverSurfView extends WatchUi.View {
         menu.addItem(new WatchUi.MenuItem("Min Surf Speed", mMinSurfSpeedThreshold.format("%.1f") + " m/s", :itemSetMinSpd, {}));
         menu.addItem(new WatchUi.MenuItem("Sweep Speed", mSweepSpeedThreshold.format("%.1f") + " m/s", :itemSetSweepSpd, {}));
         menu.addItem(new WatchUi.MenuItem("Geofence Dist", mSweepGeofenceDist.format("%.0f") + " m", :itemSetGeofence, {}));
+        menu.addItem(new WatchUi.MenuItem("Swept Cooldown", mSweptCooldownDuration.format("%d") + " s", :itemSetCooldown, {}));
         menu.addItem(new WatchUi.MenuItem("Reset Defaults", "", :itemResetDef, {}));
 
         WatchUi.pushView(menu, new RiverSurfSettingsMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
@@ -785,7 +836,7 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function cycleSweepSpeedThreshold() {
-        var steps = [1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 3.0, 3.5, 4.0];
+        var steps = [0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5, 3.0, 4.0];
         var idx = 0;
         for (var i = 0; i < steps.size(); i++) {
             if (mSweepSpeedThreshold < steps[i]) {
@@ -799,7 +850,7 @@ class RiverSurfView extends WatchUi.View {
     }
 
     function cycleGeofenceDistance() {
-        var steps = [5.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0];
+        var steps = [5.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0];
         var idx = 0;
         for (var i = 0; i < steps.size(); i++) {
             if (mSweepGeofenceDist < steps[i]) {
@@ -812,12 +863,27 @@ class RiverSurfView extends WatchUi.View {
         return mSweepGeofenceDist;
     }
 
+    function cycleSweptCooldownDuration() {
+        var steps = [10, 15, 20, 30, 45, 60, 90, 120];
+        var idx = 0;
+        for (var i = 0; i < steps.size(); i++) {
+            if (mSweptCooldownDuration < steps[i]) {
+                idx = i;
+                break;
+            }
+        }
+        mSweptCooldownDuration = steps[idx];
+        saveThresholdSettings();
+        return mSweptCooldownDuration;
+    }
+
     function resetThresholdDefaults() {
         mSurfAccelVarThreshold = 5000.0;
         mMinSurfSpeedThreshold = 0.8;
         mSurfExitSpeedThreshold = 0.6;
         mSweepSpeedThreshold = 2.0;
-        mSweepGeofenceDist = 15.0;
+        mSweepGeofenceDist = 25.0;
+        mSweptCooldownDuration = 60;
         saveThresholdSettings();
     }
 
@@ -843,6 +909,10 @@ class RiverSurfView extends WatchUi.View {
             if (valGeofence != null) {
                 mSweepGeofenceDist = valGeofence.toFloat();
             }
+            var valCooldown = Storage.getValue("sweptCooldownDuration");
+            if (valCooldown != null) {
+                mSweptCooldownDuration = valCooldown.toNumber();
+            }
         } catch (e) {
         }
     }
@@ -854,6 +924,7 @@ class RiverSurfView extends WatchUi.View {
             Storage.setValue("surfExitSpeed", mSurfExitSpeedThreshold);
             Storage.setValue("sweepSpeed", mSweepSpeedThreshold);
             Storage.setValue("sweepGeofenceDist", mSweepGeofenceDist);
+            Storage.setValue("sweptCooldownDuration", mSweptCooldownDuration);
         } catch (e) {
         }
     }

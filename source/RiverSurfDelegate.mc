@@ -90,6 +90,9 @@ class RiverSurfSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             } else if (id == :itemSetGeofence) {
                 var newVal = mView.cycleGeofenceDistance();
                 item.setSubLabel(newVal.format("%.0f") + " m");
+            } else if (id == :itemSetCooldown) {
+                var newVal = mView.cycleSweptCooldownDuration();
+                item.setSubLabel(newVal.format("%d") + " s");
             } else if (id == :itemResetDef) {
                 mView.resetThresholdDefaults();
                 WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
