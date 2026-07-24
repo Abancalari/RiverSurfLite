@@ -513,29 +513,6 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
                     lap_clean['developer_fields'] = {}
                     encoder.write_mesg(lap_clean)
 
-        elif key == 'split_summary_mesgs':
-            if new_split_summary_mesg:
-                sm_clean = clean_message_dict(new_split_summary_mesg)
-                sm_clean['mesg_num'] = 312
-                encoder.write_mesg(sm_clean)
-            else:
-                for sm in mesg_list:
-                    sm_clean = clean_message_dict(sm)
-                    sm_clean['mesg_num'] = 312
-                    encoder.write_mesg(sm_clean)
-
-        elif key == 'split_mesgs':
-            if new_split_mesgs:
-                for sm in new_split_mesgs:
-                    sm_clean = clean_message_dict(sm)
-                    sm_clean['mesg_num'] = 313
-                    encoder.write_mesg(sm_clean)
-            else:
-                for sm in mesg_list:
-                    sm_clean = clean_message_dict(sm)
-                    sm_clean['mesg_num'] = 313
-                    encoder.write_mesg(sm_clean)
-
         elif key == 'session_mesgs':
             for sess in mesg_list:
                 sess_clean = clean_message_dict(sess)
@@ -558,26 +535,15 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
 
                 encoder.write_mesg(sess_clean)
 
-    # Write Native Garmin Surf Wave Split Messages (Native Wave Traces for Garmin Connect)
-    if new_split_summary_mesg:
-        sm_clean = clean_message_dict(new_split_summary_mesg)
-        sm_clean['mesg_num'] = 312
-        encoder.write_mesg(sm_clean)
-
-    if new_split_mesgs:
-        for sm in new_split_mesgs:
-            sm_clean = clean_message_dict(sm)
-            sm_clean['mesg_num'] = 313
-            encoder.write_mesg(sm_clean)
-
         else:
-            for m in mesg_list:
-                m_clean = clean_message_dict(m)
-                m_clean['mesg_num'] = mesg_num
-                try:
-                    encoder.write_mesg(m_clean)
-                except Exception as e:
-                    pass
+            if mesg_num is not None:
+                for m in mesg_list:
+                    m_clean = clean_message_dict(m)
+                    m_clean['mesg_num'] = mesg_num
+                    try:
+                        encoder.write_mesg(m_clean)
+                    except Exception as e:
+                        pass
 
     out_bytes = encoder.close()
     with open(output_filepath, 'wb') as out_f:
