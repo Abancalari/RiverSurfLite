@@ -17,8 +17,8 @@ import io
 import csv
 from garmin_fit_sdk import Decoder, Encoder, Stream, Profile
 
-# App ID and Developer Field Definitions matching RiverSurfLite (Connect IQ)
-RIVERSURF_APP_ID = [93, 70, 120, 109, 152, 64, 71, 15, 176, 210, 173, 27, 225, 210, 76, 153]
+# App ID and Developer Field Definitions matching RiverSurfLite (Connect IQ manifest.xml: a3536fc7-ba24-4f0f-8cbb-12948c264d1f)
+RIVERSURF_APP_ID = [163, 83, 111, 199, 186, 36, 79, 15, 140, 187, 18, 148, 140, 38, 77, 31]
 
 # Developer field definitions matching Connect IQ createField IDs:
 # Field 0: wave_count (Session)
@@ -527,10 +527,10 @@ def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_sp
                     sess_clean['max_speed'] = max(sess_clean.get('max_speed', 0.0), max_wave_speed)
 
                 sess_clean['developer_fields'] = {
-                    1: total_waves,
-                    2: total_surfing_time,
-                    3: float(max_wave_speed),
-                    4: longest_wave_duration
+                    0: total_waves,
+                    1: total_surfing_time,
+                    2: float(max_wave_speed),
+                    3: longest_wave_duration
                 }
 
                 encoder.write_mesg(sess_clean)
