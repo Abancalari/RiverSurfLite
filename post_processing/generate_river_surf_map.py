@@ -6,13 +6,12 @@ import datetime
 from garmin_fit_sdk import Decoder, Stream
 from process_river_surf import semicircles_to_degrees, calculate_distance
 
-def generate_map_html(fit_filepath, output_html_path):
+def generate_map_html(fit_filepath, output_html_path, sweep_geofence_dist=25.0, min_surf_speed=0.8):
     stream = Stream.from_file(fit_filepath)
     decoder = Decoder(stream)
     messages, _ = decoder.read()
     record_mesgs = messages.get('record_mesgs', [])
 
-    sweep_geofence_dist = 20.0
     recs_count = len(record_mesgs)
 
     is_high_speed = []
@@ -27,7 +26,7 @@ def generate_map_html(fit_filepath, output_html_path):
         spd = r.get('enhanced_speed') or r.get('speed', 0.0) or 0.0
         lat = semicircles_to_degrees(r.get('position_lat'))
         lon = semicircles_to_degrees(r.get('position_long'))
-        if lat and lon and spd < 0.8:
+        if lat and lon and spd < min_surf_speed:
             waiting_lats.append(lat)
             waiting_lons.append(lon)
 
@@ -50,7 +49,7 @@ def generate_map_html(fit_filepath, output_html_path):
             if delta < swept_cooldown:
                 in_cooldown = True
 
-        if spd >= 0.8 and not is_surfing[i] and not in_cooldown:
+        if spd >= min_surf_speed and not is_surfing[i] and not in_cooldown:
             # Verify this speed spike burst eventually carries surfer outside the geofence
             leaves_zone = False
             for k in range(i, min(i + 90, recs_count)):
@@ -995,6 +994,18 @@ def generate_map_html(fit_filepath, output_html_path):
     print(f"Generated map HTML with Standing Wave Model: {output_html_path}")
 
 if __name__ == '__main__':
-    fit_path = sys.argv[1] if len(sys.argv) > 1 else '23705478847_ACTIVITY.fit'
-    out_html = sys.argv[2] if len(sys.argv) > 2 else ('river_surf_map_' + os.path.splitext(os.path.basename(fit_path))[0].split('_')[0] + '.html')
-    generate_map_html(fit_path, out_html)
+    import argparse
+    parser = argparse.ArgumentParser(description="Generate Standing Wave Map HTML")
+    parser.add_argument("fit_filepath", help="Path to raw/processed FIT file")
+    parser.add_argument("output_html_path", nargs="?", default=None, help="Output HTML map filepath")
+    parser.add_argument("--sweep-geofence", type=float, default=25.0, help="Geofence radius threshold in meters (default: 25.0)")
+    parser.add_argument("--min-surf-speed", type=float, default=0.8, help="Minimum speed threshold in m/s (default: 0.8)")
+
+    args = parser.parse_args()
+    fit_path = args.fit_filepath
+    out_html = args.output_html_path
+    if not out_html:
+        base_name = os.path.splitext(os.path.basename(fit_path))[0].split('_')[0]
+        out_html = f"river_surf_map_{base_name}.html"
+
+    generate_map_html(fit_path, out_html, sweep_geofence_dist=args.sweep_geofence, min_surf_speed=args.min_surf_speed)
