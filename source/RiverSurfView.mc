@@ -70,8 +70,8 @@ class RiverSurfView extends WatchUi.View {
 
     // Configurable Thresholds (Saved in Toybox.Application.Storage)
     private var mSurfAccelVarThreshold = 5000.0; // millig^2 (high-frequency motion)
-    private var mMinSurfSpeedThreshold = 0.8;     // 0.8 m/s = 2.9 km/h (minimum motion requirement)
-    private var mSurfExitSpeedThreshold = 0.6;    // 0.6 m/s = 2.2 km/h (drop threshold to exit wave)
+    private var mMinSurfSpeedThreshold = 0.4;     // 0.4 m/s = 1.4 km/h (minimum motion requirement)
+    private var mSurfExitSpeedThreshold = 0.2;    // 0.2 m/s = 0.7 km/h (drop threshold to exit wave)
     private var mSweepSpeedThreshold = 2.0;        // 2.0 m/s = 7.2 km/h (swept downstream river flush threshold)
     private var mSweepGeofenceDist = 25.0;         // 25.0 meters anchor radius threshold (gold-standard matching post-processor)
     private var mSweptCooldownDuration = 60;       // 60 seconds locked cooldown after swept transition
@@ -879,8 +879,8 @@ class RiverSurfView extends WatchUi.View {
 
     function resetThresholdDefaults() {
         mSurfAccelVarThreshold = 5000.0;
-        mMinSurfSpeedThreshold = 0.8;
-        mSurfExitSpeedThreshold = 0.6;
+        mMinSurfSpeedThreshold = 0.4;
+        mSurfExitSpeedThreshold = 0.2;
         mSweepSpeedThreshold = 2.0;
         mSweepGeofenceDist = 25.0;
         mSweptCooldownDuration = 60;

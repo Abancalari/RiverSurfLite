@@ -6,7 +6,7 @@ import datetime
 from garmin_fit_sdk import Decoder, Stream
 from process_river_surf import semicircles_to_degrees, calculate_distance
 
-def generate_map_html(fit_filepath, output_html_path, sweep_geofence_dist=25.0, min_surf_speed=0.8):
+def generate_map_html(fit_filepath, output_html_path, sweep_geofence_dist=25.0, min_surf_speed=0.4):
     stream = Stream.from_file(fit_filepath)
     decoder = Decoder(stream)
     messages, _ = decoder.read()
@@ -999,7 +999,7 @@ if __name__ == '__main__':
     parser.add_argument("fit_filepath", help="Path to raw/processed FIT file")
     parser.add_argument("output_html_path", nargs="?", default=None, help="Output HTML map filepath")
     parser.add_argument("--sweep-geofence", type=float, default=25.0, help="Geofence radius threshold in meters (default: 25.0)")
-    parser.add_argument("--min-surf-speed", type=float, default=0.8, help="Minimum speed threshold in m/s (default: 0.8)")
+    parser.add_argument("--min-surf-speed", type=float, default=0.4, help="Minimum speed threshold in m/s (default: 0.4)")
 
     args = parser.parse_args()
     fit_path = args.fit_filepath

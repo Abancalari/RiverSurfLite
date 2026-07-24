@@ -155,8 +155,8 @@ def clean_message_dict(msg):
             cleaned[k] = v
     return cleaned
 
-def process_fit_file(filepath, output_filepath, min_surf_speed=0.8, surf_exit_speed=0.6,
-                     sweep_speed=2.0, sweep_geofence_dist=20.0, min_wave_duration=5,
+def process_fit_file(filepath, output_filepath, min_surf_speed=0.4, surf_exit_speed=0.2,
+                     sweep_speed=2.0, sweep_geofence_dist=25.0, min_wave_duration=5,
                      swept_cooldown=60, sport_type="surfing", export_csv=False):
     
     print(f"\n{'='*70}")
@@ -727,10 +727,10 @@ def main():
     parser.add_argument("-o", "--output-dir", help="Directory to save output files (default: same directory as input)")
     parser.add_argument("-s", "--suffix", default="_processed", help="Suffix for output filename (default: _processed)")
     parser.add_argument("--sport", default="surfing", choices=["surfing", "paddling", "stand_up_paddleboarding"], help="Activity sport type in FIT file (default: surfing)")
-    parser.add_argument("--min-surf-speed", type=float, default=0.8, help="Minimum speed to trigger surf state in m/s (default: 0.8 = ~2.9 km/h)")
-    parser.add_argument("--surf-exit-speed", type=float, default=0.6, help="Drop speed to exit wave in m/s (default: 0.6 = ~2.2 km/h)")
+    parser.add_argument("--min-surf-speed", type=float, default=0.4, help="Minimum speed to trigger surf state in m/s (default: 0.4 = ~1.4 km/h)")
+    parser.add_argument("--surf-exit-speed", type=float, default=0.2, help="Drop speed to exit wave in m/s (default: 0.2 = ~0.7 km/h)")
     parser.add_argument("--sweep-speed", type=float, default=2.0, help="Downstream sweep speed threshold in m/s (default: 2.0 = ~7.2 km/h)")
-    parser.add_argument("--sweep-geofence", type=float, default=20.0, help="Geofence displacement threshold in meters (default: 20.0)")
+    parser.add_argument("--sweep-geofence", type=float, default=25.0, help="Geofence displacement threshold in meters (default: 25.0)")
     parser.add_argument("--min-wave-duration", type=int, default=5, help="Minimum wave duration in seconds (default: 5)")
     parser.add_argument("--swept-cooldown", type=int, default=60, help="Swept cooldown duration in seconds (default: 60)")
     parser.add_argument("--export-csv", action="store_true", help="Export wave breakdown to CSV")
